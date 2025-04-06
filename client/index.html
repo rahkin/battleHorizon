@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FPS Game Test Client</title>
+    <script src="https://cdn.jsdelivr.net/npm/colyseus.js@0.14.13/dist/colyseus.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .connected {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .controls {
+            margin-top: 20px;
+        }
+        button {
+            padding: 8px 16px;
+            margin-right: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .player-list {
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .player-item {
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        .player-item:last-child {
+            border-bottom: none;
+        }
+        .log {
+            margin-top: 20px;
+            height: 200px;
+            overflow-y: auto;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>FPS Game Test Client</h1>
+        <div id="status" class="status disconnected">Disconnected</div>
+        
+        <div class="controls">
+            <button id="connect">Connect</button>
+            <button id="disconnect">Disconnect</button>
+            <button id="move">Move Player</button>
+            <button id="shoot">Shoot</button>
+            <button id="reload">Reload</button>
+        </div>
+
+        <div class="player-list">
+            <h3>Players in Room</h3>
+            <div id="players"></div>
+        </div>
+
+        <div class="log">
+            <h3>Event Log</h3>
+            <div id="log"></div>
+        </div>
+    </div>
+
+    <script src="client.js"></script>
+</body>
+</html> 

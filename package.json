@@ -1,0 +1,23 @@
+{
+    "name": "fps-game",
+    "version": "1.0.0",
+    "description": "A browser-based FPS game built with PlayCanvas",
+    "main": "index.html",
+    "scripts": {
+        "start": "http-server -p 8080",
+        "build": "echo 'No build step required'",
+        "test": "echo 'No tests configured'"
+    },
+    "keywords": [
+        "game",
+        "fps",
+        "playcanvas",
+        "3d",
+        "webgl"
+    ],
+    "author": "",
+    "license": "MIT",
+    "devDependencies": {
+        "http-server": "^14.1.1"
+    }
+} 
