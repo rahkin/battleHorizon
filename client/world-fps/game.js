@@ -244,170 +244,137 @@ class WorldFPS {
             maxPitch: 85
         });
 
+        // Initialize Three.js scene first
+        this.initializeThreeJS();
+
         this.map.on('style.load', () => {
+            // Add terrain source with higher detail
+            this.map.addSource('mapbox-dem', {
+                'type': 'raster-dem',
+                'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
+                'tileSize': 512,
+                'maxzoom': 14
+            });
+
+            // Add terrain layer with minimal exaggeration for urban environment
+            this.map.setTerrain({
+                'source': 'mapbox-dem',
+                'exaggeration': 0.3  // Significantly reduced for flatter urban terrain
+            });
+
             // Remove any existing building layers
             if (this.map.getLayer('3d-buildings-windows')) this.map.removeLayer('3d-buildings-windows');
             if (this.map.getLayer('3d-buildings-base')) this.map.removeLayer('3d-buildings-base');
             if (this.map.getLayer('3d-buildings')) this.map.removeLayer('3d-buildings');
 
-            // Add clean buildings with street style
+            // Add building footprints layer
+            this.map.addSource('composite-buildings', {
+                'type': 'vector',
+                'url': 'mapbox://mapbox.mapbox-streets-v8'
+            });
+
+            // Add realistic 3D buildings with actual footprints
             this.map.addLayer({
                 'id': '3d-buildings',
-                'source': 'composite',
+                'source': 'composite-buildings',
                 'source-layer': 'building',
-                'filter': ['==', 'extrude', 'true'],
+                'filter': ['has', 'height'],
                 'type': 'fill-extrusion',
                 'minzoom': 15,
                 'paint': {
-                    'fill-extrusion-color': '#D3D3D3',  // Light gray for buildings
-                    'fill-extrusion-height': ['get', 'height'],
-                    'fill-extrusion-base': ['get', 'min_height'],
+                    'fill-extrusion-color': [
+                        'interpolate',
+                        ['linear'],
+                        ['get', 'height'],
+                        0, '#e8e8e8',    // Base color for low buildings
+                        50, '#d8d8d8',   // Medium height buildings
+                        100, '#c8c8c8',  // Taller buildings
+                        200, '#b8b8b8'   // Skyscrapers
+                    ],
+                    'fill-extrusion-height': [
+                        'interpolate',
+                        ['linear'],
+                        ['zoom'],
+                        15, 0,
+                        15.05, ['get', 'height']
+                    ],
+                    'fill-extrusion-base': [
+                        'interpolate',
+                        ['linear'],
+                        ['zoom'],
+                        15, 0,
+                        15.05, ['get', 'min_height']
+                    ],
                     'fill-extrusion-opacity': 1,
                     'fill-extrusion-vertical-gradient': true,
-                    'fill-extrusion-ambient-occlusion-intensity': 0.3,
-                    'fill-extrusion-ambient-occlusion-radius': 3
+                    'fill-extrusion-ambient-occlusion-intensity': 0.5,
+                    'fill-extrusion-ambient-occlusion-radius': 4
                 }
             });
 
-            // Add custom 3D objects
-            this.add3DObjects();
+            // Add vegetation and parks with improved detail
+            this.map.addLayer({
+                'id': 'vegetation',
+                'type': 'fill-extrusion',
+                'source': 'composite-buildings',
+                'source-layer': 'landuse',
+                'filter': ['in', 'class', 'grass', 'park', 'garden', 'wood'],
+                'paint': {
+                    'fill-extrusion-color': [
+                        'match',
+                        ['get', 'class'],
+                        'grass', '#90cf7d',
+                        'park', '#7cba6d',
+                        'garden', '#83c573',
+                        'wood', '#6ab55f',
+                        '#7cba6d'  // default color
+                    ],
+                    'fill-extrusion-height': 0.1,  // Reduced height for ground cover
+                    'fill-extrusion-base': 0,
+                    'fill-extrusion-opacity': 0.8
+                }
+            });
 
-            // Adjust lighting for clear visibility
+            // Wait for the map to be fully loaded before adding 3D objects
+            this.map.once('idle', () => {
+                console.log('Map loaded, adding 3D objects...');
+                this.add3DObjects();
+            });
+
+            // Adjust lighting for realistic shadows
             this.map.setLight({
                 anchor: 'viewport',
                 color: '#ffffff',
-                intensity: 0.85,  // Increased for better visibility without fog
-                position: [1.5, 90, 80]
+                intensity: 0.85,
+                position: [1.5, 45, 60]
             });
 
-            // Add sky layer with high visibility
+            // Add sky layer
             this.map.addLayer({
                 'id': 'sky',
                 'type': 'sky',
                 'paint': {
                     'sky-type': 'atmosphere',
-                    'sky-atmosphere-sun': [0, 90],
+                    'sky-atmosphere-sun': [45, 45],
                     'sky-atmosphere-sun-intensity': 5,
-                    'sky-opacity': 0.5  // Reduced opacity for clearer view
+                    'sky-opacity': 0.5
                 }
             });
         });
     }
 
     add3DObjects() {
-        // Get vegetation and landuse data from Mapbox
-        const features = this.map.querySourceFeatures('composite', {
-            sourceLayer: ['landuse', 'vegetation']
+        console.log('Adding 3D objects...');
+        
+        // Get vegetation and landuse data
+        const features = this.map.queryRenderedFeatures({
+            layers: ['vegetation']
         });
 
-        // Add trees and grass in appropriate areas
-        features.forEach((feature, index) => {
-            if (feature.properties.class === 'park' || 
-                feature.properties.class === 'grass' || 
-                feature.properties.class === 'garden') {
-                
-                // Add trees with varied sizes and rotations
-                if (this.models.tree && index % 3 === 0) {
-                    const tree = this.models.tree.clone();
-                    const scale = 0.4 + Math.random() * 0.2; // Random size variation
-                    const randomOffset = {
-                        x: (Math.random() - 0.5) * 0.0002,
-                        y: (Math.random() - 0.5) * 0.0002
-                    };
-                    tree.position.set(
-                        feature.geometry.coordinates[0] + randomOffset.x,
-                        feature.geometry.coordinates[1] + randomOffset.y,
-                        0
-                    );
-                    tree.scale.set(scale, scale, scale);
-                    tree.rotation.y = Math.random() * Math.PI * 2; // Random rotation
-                    this.scene.add(tree);
-                }
+        console.log(`Found ${features.length} vegetation features`);
 
-                // Add grass patches with varied density
-                if (this.models.grass && index % 2 === 0) {
-                    const grassPatch = this.models.grass.clone();
-                    const randomOffset = {
-                        x: (Math.random() - 0.5) * 0.0002,
-                        y: (Math.random() - 0.5) * 0.0002
-                    };
-                    grassPatch.position.set(
-                        feature.geometry.coordinates[0] + randomOffset.x,
-                        feature.geometry.coordinates[1] + randomOffset.y,
-                        0
-                    );
-                    grassPatch.scale.set(0.3, 0.3, 0.3);
-                    grassPatch.rotation.y = Math.random() * Math.PI * 2;
-                    this.scene.add(grassPatch);
-                }
-
-                // Add benches in parks
-                if (this.models.bench && index % 10 === 0) {
-                    const bench = this.models.bench.clone();
-                    const randomOffset = {
-                        x: (Math.random() - 0.5) * 0.0002,
-                        y: (Math.random() - 0.5) * 0.0002
-                    };
-                    bench.position.set(
-                        feature.geometry.coordinates[0] + randomOffset.x,
-                        feature.geometry.coordinates[1] + randomOffset.y,
-                        0
-                    );
-                    bench.scale.set(0.3, 0.3, 0.3);
-                    bench.rotation.y = Math.random() * Math.PI * 2;
-                    this.scene.add(bench);
-                }
-            }
-        });
-
-        // Add street lights along roads
-        const roadFeatures = this.map.querySourceFeatures('composite', {
-            sourceLayer: 'road'
-        });
-
-        roadFeatures.forEach((feature, index) => {
-            if (index % 15 === 0) { // Space out the street lights
-                const streetLight = new THREE.Group();
-                
-                // Light pole
-                const poleGeometry = new THREE.CylinderGeometry(0.05, 0.05, 3, 8);
-                const poleMaterial = new THREE.MeshStandardMaterial({
-                    color: 0x404040,
-                    roughness: 0.7,
-                    metalness: 0.5
-                });
-                const pole = new THREE.Mesh(poleGeometry, poleMaterial);
-                pole.castShadow = true;
-                
-                // Light fixture
-                const fixtureGeometry = new THREE.BoxGeometry(0.3, 0.1, 0.3);
-                const fixtureMaterial = new THREE.MeshStandardMaterial({
-                    color: 0x404040,
-                    roughness: 0.7,
-                    metalness: 0.5
-                });
-                const fixture = new THREE.Mesh(fixtureGeometry, fixtureMaterial);
-                fixture.position.y = 1.5;
-                
-                // Light source
-                const light = new THREE.PointLight(0xffffcc, 0.5, 10);
-                light.position.y = 1.5;
-                
-                streetLight.add(pole);
-                streetLight.add(fixture);
-                streetLight.add(light);
-                
-                // Position along the road
-                streetLight.position.set(
-                    feature.geometry.coordinates[0],
-                    feature.geometry.coordinates[1],
-                    0
-                );
-                streetLight.scale.set(0.5, 0.5, 0.5);
-                
-                this.scene.add(streetLight);
-            }
-        });
+        // We'll keep this method empty for now since we're removing vegetation
+        // This will be used later for adding other 3D objects if needed
     }
 
     initializeThreeJS() {
@@ -653,8 +620,8 @@ class WorldFPS {
 
     updateCamera() {
         // Calculate camera position based on car position and rotation
-        const distance = 8;  // Reduced distance for closer view
-        const height = 3;    // Lower height for more street-level view
+        const distance = 5;  // Reduced distance for closer street-level view
+        const height = 2;    // Lower height for more street-level view
         const angle = this.playerState.rotation * Math.PI / 180;
         
         const cameraX = this.playerModel.position.x - Math.sin(angle) * distance;
@@ -680,7 +647,7 @@ class WorldFPS {
             // Update map and camera
             this.map.setCenter(this.playerState.position);
             this.map.setBearing(this.playerState.rotation);
-            this.map.setPitch(80); // Higher pitch to see more horizon
+            this.map.setPitch(75); // Slightly reduced pitch for better street-level view
             
             // Update camera
             this.updateCamera();
