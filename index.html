@@ -1,280 +1,75 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>FPS Game</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battle Horizon</title>
+    <script src='https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.css' rel='stylesheet' />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         body {
             margin: 0;
-            padding: 0;
             overflow: hidden;
-            background-color: #000;
+            font-family: Arial, sans-serif;
         }
-        canvas {
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        #map {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
         }
-        #loading {
+        #game-canvas {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
-            font-family: Arial, sans-serif;
-            font-size: 24px;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
         }
         #hud {
             position: absolute;
             top: 20px;
             left: 20px;
             color: white;
-            font-family: Arial, sans-serif;
-            font-size: 16px;
+            text-shadow: 2px 2px 2px rgba(0,0,0,0.5);
+            z-index: 1000;
         }
-        #health-bar {
-            width: 200px;
-            height: 20px;
-            background-color: #333;
-            margin-bottom: 10px;
-        }
-        #health-fill {
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
-            background-color: #4CAF50;
-            transition: width 0.3s;
-        }
-        #ammo {
-            margin-top: 10px;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 24px;
+            z-index: 1000;
         }
     </style>
 </head>
 <body>
-    <div id="loading">Loading...</div>
-    <div id="hud">
-        <div id="health-bar">
-            <div id="health-fill"></div>
+    <div id="game-container">
+        <div id="map"></div>
+        <canvas id="game-canvas"></canvas>
+        <div id="hud">
+            <div id="health">Health: 100</div>
+            <div id="ammo">Ammo: 30/90</div>
+            <div id="ability">Ability: Ready</div>
+            <div id="location">Loading location...</div>
         </div>
-        <div id="ammo">Ammo: 30/90</div>
     </div>
-    <canvas id="application-canvas"></canvas>
-    
-    <!-- PlayCanvas Engine -->
-    <script src="https://cdn.jsdelivr.net/npm/playcanvas@1.60.0/build/playcanvas.min.js"></script>
-    
-    <!-- Game Scripts -->
-    <script>
-        // Wait for PlayCanvas to load
-        window.addEventListener('load', function() {
-            if (typeof pc === 'undefined') {
-                document.getElementById('loading').textContent = 'Error: PlayCanvas failed to load. Please refresh the page.';
-                return;
-            }
-            
-            // Create the application first
-            const canvas = document.getElementById('application-canvas');
-            const app = new pc.Application(canvas, {
-                mouse: new pc.Mouse(canvas),
-                keyboard: new pc.Keyboard(window),
-                touch: new pc.TouchDevice(canvas)
-            });
-            
-            // Fill the available space at full resolution
-            app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-            app.setCanvasResolution(pc.RESOLUTION_AUTO);
-            
-            // Create the scene
-            const scene = new pc.Scene();
-            app.scene = scene;
-            
-            // Initialize layer system
-            const layerComposition = new pc.LayerComposition();
-            scene.layers = layerComposition;
-            
-            // Create default layer
-            const defaultLayer = new pc.Layer({
-                name: "Default",
-                enabled: true,
-                shaderPass: pc.SHADER_FORWARD
-            });
-            layerComposition.push(defaultLayer);
-            scene.defaultLayer = defaultLayer;
-            
-            // Now load game scripts
-            const scripts = [
-                'scripts/init.js',
-                'scripts/playerController.js',
-                'scripts/weapon.js',
-                'scripts/health.js',
-                'scripts/gameManager.js',
-                'scripts/botController.js'
-            ];
-            
-            let loadedScripts = 0;
-            
-            // Load scripts
-            scripts.forEach(function(script) {
-                const scriptElement = document.createElement('script');
-                scriptElement.src = script;
-                scriptElement.onload = function() {
-                    loadedScripts++;
-                    if (loadedScripts === scripts.length) {
-                        if (typeof initScripts === 'function') {
-                            try {
-                                if (initScripts()) {
-                                    // Create camera
-                                    const camera = new pc.Entity('camera');
-                                    camera.addComponent('camera', {
-                                        clearColor: new pc.Color(0.1, 0.1, 0.1),
-                                        layers: [defaultLayer.id]
-                                    });
-                                    
-                                    // Create directional light
-                                    const light = new pc.Entity('light');
-                                    light.addComponent('light', {
-                                        type: 'directional',
-                                        color: new pc.Color(1, 1, 1),
-                                        castShadows: true,
-                                        intensity: 1,
-                                        layers: [defaultLayer.id]
-                                    });
-                                    light.setEulerAngles(45, 30, 0);
-                                    
-                                    // Create ground
-                                    const ground = new pc.Entity('ground');
-                                    ground.addComponent('model', {
-                                        type: 'box',
-                                        layers: [defaultLayer.id]
-                                    });
-                                    ground.addComponent('rigidbody', {
-                                        type: 'static'
-                                    });
-                                    ground.addComponent('collision', {
-                                        type: 'box',
-                                        halfExtents: new pc.Vec3(50, 1, 50)
-                                    });
-                                    ground.setLocalScale(100, 2, 100);
-                                    ground.setPosition(0, -1, 0);
-                                    
-                                    // Add base entities to scene
-                                    scene.root.addChild(camera);
-                                    scene.root.addChild(light);
-                                    scene.root.addChild(ground);
-                                    
-                                    // Start the application
-                                    app.start();
-                                    
-                                    // Initialize game
-                                    initializeGame(app, scene, camera, defaultLayer);
-                                } else {
-                                    throw new Error('Script initialization failed');
-                                }
-                            } catch (error) {
-                                console.error('Error during script initialization:', error);
-                                document.getElementById('loading').textContent = 'Error: Failed to initialize scripts';
-                            }
-                        } else {
-                            document.getElementById('loading').textContent = 'Error: initScripts function not found';
-                        }
-                    }
-                };
-                scriptElement.onerror = function() {
-                    document.getElementById('loading').textContent = 'Error: Failed to load ' + script;
-                };
-                document.head.appendChild(scriptElement);
-            });
-            
-            function initializeGame(app, scene, camera, defaultLayer) {
-                try {
-                    // Create player
-                    const player = new pc.Entity('player');
-                    player.addComponent('model', {
-                        type: 'capsule',
-                        layers: [defaultLayer.id]
-                    });
-                    player.addComponent('rigidbody', {
-                        type: 'dynamic',
-                        mass: 1,
-                        friction: 0.5,
-                        restitution: 0.2
-                    });
-                    player.addComponent('collision', {
-                        type: 'capsule',
-                        height: 2,
-                        radius: 0.5
-                    });
-                    player.setPosition(0, 1, 0);
-                    player.tags.add('player');
-                    scene.root.addChild(player);
-                    
-                    // Add player controller script
-                    player.addComponent('script');
-                    player.script.create('playerController', {
-                        attributes: {
-                            cameraEntity: camera
-                        }
-                    });
-                    
-                    // Add health component
-                    player.addComponent('script');
-                    player.script.create('health', {
-                        attributes: {
-                            isPlayer: true
-                        }
-                    });
-                    
-                    // Create bot
-                    const bot = new pc.Entity('bot');
-                    bot.addComponent('model', {
-                        type: 'capsule',
-                        layers: [defaultLayer.id]
-                    });
-                    bot.addComponent('rigidbody', {
-                        type: 'dynamic',
-                        mass: 1,
-                        friction: 0.5,
-                        restitution: 0.2
-                    });
-                    bot.addComponent('collision', {
-                        type: 'capsule',
-                        height: 2,
-                        radius: 0.5
-                    });
-                    bot.setPosition(10, 1, 10);
-                    scene.root.addChild(bot);
-                    
-                    // Add bot controller script
-                    bot.addComponent('script');
-                    bot.script.create('botController', {
-                        attributes: {
-                            moveSpeed: 3,
-                            detectionRange: 20,
-                            attackRange: 15
-                        }
-                    });
-                    
-                    // Add health component to bot
-                    bot.addComponent('script');
-                    bot.script.create('health', {
-                        attributes: {
-                            isPlayer: false
-                        }
-                    });
-                    
-                    // Create game manager
-                    const gameManager = new pc.Entity('gameManager');
-                    gameManager.addComponent('script');
-                    gameManager.script.create('gameManager');
-                    scene.root.addChild(gameManager);
-                    
-                    // Hide loading screen
-                    document.getElementById('loading').style.display = 'none';
-                } catch (error) {
-                    console.error('Error during game initialization:', error);
-                    document.getElementById('loading').textContent = 'Error: Failed to initialize game';
-                }
-            }
-        });
-    </script>
+    <script type="module" src="vehicles.js"></script>
+    <script type="module" src="vehicleSelect.js"></script>
+    <script type="module" src="game.js"></script>
 </body>
 </html> 
