@@ -1,38 +1,237 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <title>World FPS - Ho Chi Minh City</title>
-    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
-    <!-- Mapbox -->
-    <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
-    <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battle Horizon</title>
     
-    <!-- Three.js and dependencies (in correct order) -->
+    <!-- External Dependencies -->
+    <script src='https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.css' rel='stylesheet' />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <!-- Shaders must be loaded before passes -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/FXAAShader.js"></script>
-    <!-- Passes must be loaded after shaders -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/Pass.js"></script>
     
-    <!-- Custom styles -->
-    <link href="styles.css" rel="stylesheet">
-    <script src="game.js" defer></script>
+    <!-- Buffer and Process Polyfills -->
+    <script>
+        window.global = window;
+        var THREE = window.THREE;
+        window.process = {
+            env: { DEBUG: undefined },
+            version: [],
+            browser: true
+        };
+    </script>
+    <script type="module">
+        import { Buffer } from 'https://cdn.jsdelivr.net/npm/buffer@6.0.3/+esm';
+        window.Buffer = Buffer;
+    </script>
+    
+    <!-- Colyseus Client -->
+    <script src="https://unpkg.com/colyseus.js@0.15.9/dist/colyseus.js"></script>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: none;
+        }
+        
+        #map {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        #game-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none;
+            background: transparent;
+        }
+        
+        #vehicle-select {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        
+        #hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            text-shadow: 2px 2px 2px rgba(0,0,0,0.5);
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+            pointer-events: none;
+        }
+        
+        .mapboxgl-canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+        
+        #hud div {
+            margin: 5px 0;
+        }
+        
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 24px;
+            z-index: 1000;
+        }
+        
+        #teleport-box {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 300px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            z-index: 1000;
+            padding: 10px;
+            color: white;
+        }
+        
+        #location-search {
+            width: calc(100% - 20px);
+            padding: 8px;
+            border: none;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        #search-results {
+            max-height: 150px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .search-result {
+            padding: 8px 10px;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .search-result:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .damage-indicator {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            margin-top: 5px;
+        }
+        
+        .damage-bar {
+            height: 100%;
+            background: #4CAF50;
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+    </style>
 </head>
 <body>
-    <div id="map"></div>
-    <div id="game-overlay">
-        <div id="crosshair">+</div>
-        <div id="ammo">30/90</div>
-        <div id="health">100</div>
-        <div id="location">Loading...</div>
+    <!-- Vehicle Selection Screen -->
+    <div id="vehicle-select">
+        <h2>Select Your Vehicle</h2>
+        <div class="vehicle-grid"></div>
+        <button id="start-game" disabled>Start Game</button>
     </div>
-    <canvas id="game-canvas"></canvas>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen" style="display: none;">
+        <h2>Loading Battle Horizon...</h2>
+    </div>
+    
+    <!-- Game Container -->
+    <div id="game-container" style="display: none;">
+        <div id="map"></div>
+        <canvas id="game-canvas" willReadFrequently="true"></canvas>
+        <div id="hud">
+            <div id="health">HP: 100</div>
+            <div id="ammo">100/300</div>
+            <div id="damage-state">State: Pristine</div>
+            <div class="damage-indicator">
+                <div class="damage-bar" style="width: 100%"></div>
+            </div>
+            <div id="location">Loading location...</div>
+        </div>
+        <div id="teleport-box">
+            <input type="text" id="location-search" placeholder="Search for a city to teleport...">
+            <div id="search-results"></div>
+        </div>
+    </div>
+
+    <!-- Game Scripts -->
+    <script type="module">
+        // Initialize game after all modules are loaded
+        import { WorldFPS } from './game.js';
+
+        // Wait for DOM content to load
+        window.addEventListener('DOMContentLoaded', () => {
+            try {
+                // Create game instance
+                window.game = new WorldFPS();
+            } catch (error) {
+                console.error('Error initializing game:', error);
+            }
+        });
+    </script>
 </body>
 </html> 
