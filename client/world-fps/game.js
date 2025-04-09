@@ -567,26 +567,26 @@ export class WorldFPS {
     createJunkyardKingModel() {
         const model = new THREE.Group();
         
-        // Rusty van body
-        const bodyGeometry = new THREE.BoxGeometry(7, 4, 12);
+        // Rusty van body - halved dimensions
+        const bodyGeometry = new THREE.BoxGeometry(3.5, 2, 6);
         const bodyMaterial = new THREE.MeshStandardMaterial({
-            color: 0x8B4513, // Rusty brown
+            color: 0x8B4513,
             metalness: 0.3,
             roughness: 0.9
         });
         const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-        body.position.y = 2.0; // Raise body to accommodate wheels
+        body.position.y = 1.5;
         
-        // Reinforced cabin
-        const cabinGeometry = new THREE.BoxGeometry(6, 3, 5);
+        // Reinforced cabin - halved dimensions
+        const cabinGeometry = new THREE.BoxGeometry(3, 1.5, 2.5);
         const cabinMaterial = new THREE.MeshStandardMaterial({
             color: 0x4a4a4a,
             metalness: 0.4,
             roughness: 0.8
         });
         const cabin = new THREE.Mesh(cabinGeometry, cabinMaterial);
-        cabin.position.y = 3.5;
-        cabin.position.z = -2;
+        cabin.position.y = 2.25;
+        cabin.position.z = -1;
 
         // Create wheel groups for steering
         const frontLeftWheelGroup = new THREE.Group();
@@ -595,25 +595,25 @@ export class WorldFPS {
         const backRightWheelGroup = new THREE.Group();
         
         // Position the wheel groups relative to body
-        frontLeftWheelGroup.position.set(3.5, 2.0, 5);
-        frontRightWheelGroup.position.set(-3.5, 2.0, 5);
-        backLeftWheelGroup.position.set(3.5, 2.0, -5);
-        backRightWheelGroup.position.set(-3.5, 2.0, -5);
+        frontLeftWheelGroup.position.set(1.75, 0.75, 2.5);
+        frontRightWheelGroup.position.set(-1.75, 0.75, 2.5);
+        backLeftWheelGroup.position.set(1.75, 0.75, -2.5);
+        backRightWheelGroup.position.set(-1.75, 0.75, -2.5);
         
         model.add(frontLeftWheelGroup);
         model.add(frontRightWheelGroup);
         model.add(backLeftWheelGroup);
         model.add(backRightWheelGroup);
         
-        // Add wheels - larger than Razorback's wheels
-        const wheelGeometry = new THREE.CylinderGeometry(1.5, 1.5, 1.2, 16);
+        // Add wheels
+        const wheelGeometry = new THREE.CylinderGeometry(0.75, 0.75, 0.5, 16);
         const wheelMaterial = new THREE.MeshStandardMaterial({
             color: 0x1a1a1a,
             metalness: 0.5,
             roughness: 0.7
         });
 
-        // Front wheels - added to their respective groups
+        // Add wheels to their groups
         const frontLeftWheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
         frontLeftWheel.rotation.z = Math.PI / 2;
         frontLeftWheelGroup.add(frontLeftWheel);
@@ -622,7 +622,6 @@ export class WorldFPS {
         frontRightWheel.rotation.z = Math.PI / 2;
         frontRightWheelGroup.add(frontRightWheel);
 
-        // Back wheels - added to their respective groups
         const backLeftWheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
         backLeftWheel.rotation.z = Math.PI / 2;
         backLeftWheelGroup.add(backLeftWheel);
@@ -631,8 +630,9 @@ export class WorldFPS {
         backRightWheel.rotation.z = Math.PI / 2;
         backRightWheelGroup.add(backRightWheel);
         
-        // Flamethrower
-        const tankGeometry = new THREE.CylinderGeometry(1, 1, 3);
+        // Flamethrower system - mounted at the front
+        // Main tank (mounted on top)
+        const tankGeometry = new THREE.CylinderGeometry(0.5, 0.5, 2.0);
         const tankMaterial = new THREE.MeshStandardMaterial({
             color: 0x333333,
             metalness: 0.7,
@@ -640,25 +640,46 @@ export class WorldFPS {
         });
         const tank = new THREE.Mesh(tankGeometry, tankMaterial);
         tank.rotation.z = Math.PI / 2;
-        tank.position.set(3, 2, 2);
+        tank.position.set(0, 2.5, 0); // Centered on top of the van
+
+        // Large front-mounted nozzle (primary)
+        const largeNozzleGeometry = new THREE.CylinderGeometry(0.3, 0.4, 1.2);
+        const largeNozzle = new THREE.Mesh(largeNozzleGeometry, tankMaterial);
+        largeNozzle.rotation.x = Math.PI / 2;
+        largeNozzle.position.set(0, 1.8, 3.2); // Centered at front, slightly higher
+
+        // Small secondary nozzle
+        const smallNozzleGeometry = new THREE.CylinderGeometry(0.15, 0.2, 0.8);
+        const smallNozzle = new THREE.Mesh(smallNozzleGeometry, tankMaterial);
+        smallNozzle.rotation.x = Math.PI / 2;
+        smallNozzle.position.set(1.0, 1.5, 3.0); // Offset to the right side
+
+        // Connecting pipes
+        const pipeGeometry = new THREE.CylinderGeometry(0.1, 0.1, 2.0);
+        const pipe1 = new THREE.Mesh(pipeGeometry, tankMaterial);
+        pipe1.position.set(0, 2.2, 1.5);
+        pipe1.rotation.x = Math.PI / 4;
+
+        const pipe2 = new THREE.Mesh(pipeGeometry, tankMaterial);
+        pipe2.position.set(1.0, 2.0, 1.5);
+        pipe2.rotation.x = Math.PI / 4;
         
-        const nozzleGeometry = new THREE.CylinderGeometry(0.3, 0.5, 2);
-        const nozzle = new THREE.Mesh(nozzleGeometry, tankMaterial);
-        nozzle.position.set(3, 2, 4);
-        nozzle.rotation.x = Math.PI / 2;
-        
-        // Add direction indicator (small arrow)
+        // Add direction indicator
         const directionArrow = new THREE.Mesh(
-            new THREE.ConeGeometry(0.4, 1.2, 8),
+            new THREE.ConeGeometry(0.2, 0.6, 8),
             new THREE.MeshStandardMaterial({ color: 0xff0000 })
         );
         directionArrow.rotation.x = -Math.PI / 2;
-        directionArrow.position.set(0, 4.5, 6);
+        directionArrow.position.set(0, 2.75, 3);
         
+        // Add all components to the model
         model.add(body);
         model.add(cabin);
         model.add(tank);
-        model.add(nozzle);
+        model.add(largeNozzle);
+        model.add(smallNozzle);
+        model.add(pipe1);
+        model.add(pipe2);
         model.add(directionArrow);
         
         // Store references and orientation data
@@ -667,7 +688,19 @@ export class WorldFPS {
                 left: frontLeftWheelGroup,
                 right: frontRightWheelGroup
             },
-            cannons: [nozzle],
+            wheels: {
+                frontLeft: frontLeftWheel,
+                frontRight: frontRightWheel,
+                backLeft: backLeftWheel,
+                backRight: backRightWheel
+            },
+            wheelGroups: {
+                frontLeft: frontLeftWheelGroup,
+                frontRight: frontRightWheelGroup,
+                backLeft: backLeftWheelGroup,
+                backRight: backRightWheelGroup
+            },
+            cannons: [largeNozzle, smallNozzle], // Both nozzles as flame emission points
             directionArrow: directionArrow,
             forward: new THREE.Vector3(0, 0, 1),
             right: new THREE.Vector3(1, 0, 0),
@@ -1020,7 +1053,7 @@ export class WorldFPS {
         }
 
         const now = Date.now();
-        const cooldown = 100;
+        const cooldown = this.gameState.selectedVehicle.cooldown || 100;
 
         if (this.lastShotTime && now - this.lastShotTime < cooldown) {
             this.log.debug('Shot cooldown in effect');
@@ -1031,96 +1064,185 @@ export class WorldFPS {
         // Get cannon references and vehicle orientation
         const model = this.gameState.vehicleModel;
         const cannons = model.userData.cannons || [];
-        const forwardVector = model.userData.forward;
-        
-        cannons.forEach((cannon, index) => {
-            // Get cannon's world position
-            const cannonWorldPos = new THREE.Vector3();
-            cannon.getWorldPosition(cannonWorldPos);
+        const forwardVector = new THREE.Vector3(0, 0, 1);
+        forwardVector.applyQuaternion(model.quaternion);
 
-            const projectile = new THREE.Group();
-            
-            // Create projectile sphere
-            const projectileSphere = new THREE.Mesh(
-                new THREE.SphereGeometry(0.3, 16, 16),
-                new THREE.MeshStandardMaterial({
-                    color: 0xff0000,
-                    emissive: 0xff0000,
-                    emissiveIntensity: 2.0
-                })
-            );
-            projectile.add(projectileSphere);
+        // Special handling for Junkyard King's flamethrower
+        if (this.gameState.selectedVehicle.type === 'Modified Van') {
+            cannons.forEach(cannon => {
+                // Get cannon's world position and orientation
+                const cannonWorldPos = new THREE.Vector3();
+                const cannonWorldQuat = new THREE.Quaternion();
+                cannon.getWorldPosition(cannonWorldPos);
+                cannon.getWorldQuaternion(cannonWorldQuat);
 
-            // Add trail
-            const trailGeometry = new THREE.CylinderGeometry(0.2, 0.1, 2, 8);
-            const trailMaterial = new THREE.MeshBasicMaterial({
-                color: 0xff7700,
-                transparent: true,
-                opacity: 0.7
+                // Create flame group
+                const flameGroup = new THREE.Group();
+                
+                // Create multiple flame segments with increasing size
+                const numSegments = 20;
+                const baseLength = 192.0;
+                const segmentLength = baseLength / numSegments;
+                
+                for (let i = 0; i < numSegments; i++) {
+                    const distanceFactor = i / numSegments;
+                    const flameRadius = 2.0 + (distanceFactor * 8.0);
+                    const flameLength = segmentLength * (1 + distanceFactor);
+                    
+                    const flamesPerSegment = 3;
+                    for (let j = 0; j < flamesPerSegment; j++) {
+                        const flameGeometry = new THREE.ConeGeometry(flameRadius, flameLength, 12);
+                        const flameMaterial = new THREE.MeshBasicMaterial({
+                            color: i < numSegments/3 ? 0xff1100 : (i < numSegments*2/3 ? 0xff4400 : 0xff6600),
+                            transparent: true,
+                            opacity: 0.9 - (distanceFactor * 0.5)
+                        });
+                        const flame = new THREE.Mesh(flameGeometry, flameMaterial);
+                        
+                        // Position within segment
+                        const angle = (j / flamesPerSegment) * Math.PI * 2;
+                        const spreadRadius = flameRadius * 0.5;
+                        flame.position.x = Math.cos(angle) * spreadRadius * distanceFactor;
+                        flame.position.y = Math.sin(angle) * spreadRadius * distanceFactor;
+                        flame.position.z = i * segmentLength;
+                        
+                        // Align flame with cannon direction
+                        flame.rotation.x = Math.PI / 2;
+                        flameGroup.add(flame);
+                    }
+
+                    // Add point lights for dramatic effect
+                    if (i % 4 === 0) {
+                        const flameLight = new THREE.PointLight(0xff2200, 20 - (distanceFactor * 12), 40);
+                        flameLight.position.set(0, 0, i * segmentLength);
+                        flameGroup.add(flameLight);
+                    }
+                }
+
+                // Position and orient the flame group at the cannon
+                flameGroup.position.copy(cannonWorldPos);
+                flameGroup.quaternion.copy(cannonWorldQuat);
+                
+                // Add to scene
+                this.gameState.scene.add(flameGroup);
+
+                // Set up flame properties with correct velocity direction
+                const flameVelocity = new THREE.Vector3(0, 0, 1);
+                flameVelocity.applyQuaternion(cannonWorldQuat);
+                flameVelocity.multiplyScalar(480.0);
+
+                flameGroup.userData = {
+                    velocity: {
+                        x: flameVelocity.x,
+                        y: 0,
+                        z: flameVelocity.z
+                    },
+                    lifetime: now + 1500,
+                    spawnTime: now,
+                    type: 'flame'
+                };
+
+                if (!this.gameState.projectiles) {
+                    this.gameState.projectiles = [];
+                }
+                
+                this.gameState.projectiles.push(flameGroup);
+
+                // Create enhanced muzzle flash effect
+                this.createFlameEffect(cannonWorldPos);
             });
-            const trail = new THREE.Mesh(trailGeometry, trailMaterial);
-            trail.rotation.x = Math.PI / 2;
-            trail.position.z = -1;
-            projectile.add(trail);
+        } else {
+            // Regular projectile handling for other vehicles
+            cannons.forEach((cannon, index) => {
+                // Get cannon's world position
+                const cannonWorldPos = new THREE.Vector3();
+                cannon.getWorldPosition(cannonWorldPos);
 
-            // Set projectile position to cannon's world position
-            projectile.position.copy(cannonWorldPos);
-            
-            // Use forward vector for projectile direction
-            const projectileSpeed = 200.0;
-            const initialUpwardVelocity = 5.0;
-            
-            projectile.userData = {
-                velocity: {
-                    x: forwardVector.x * projectileSpeed,
-                    y: initialUpwardVelocity,
-                    z: forwardVector.z * projectileSpeed
-                },
-                lifetime: now + 3000,
-                spawnTime: now,
-                lastPosition: projectile.position.clone()
-            };
+                const projectile = new THREE.Group();
+                
+                // Create projectile sphere
+                const projectileSphere = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.3, 16, 16),
+                    new THREE.MeshStandardMaterial({
+                        color: 0xff0000,
+                        emissive: 0xff0000,
+                        emissiveIntensity: 2.0
+                    })
+                );
+                projectile.add(projectileSphere);
 
-            if (!this.gameState.projectiles) {
-                this.gameState.projectiles = [];
-            }
-            
-            this.gameState.projectiles.push(projectile);
-            this.gameState.scene.add(projectile);
+                // Add trail
+                const trailGeometry = new THREE.CylinderGeometry(0.2, 0.1, 2, 8);
+                const trailMaterial = new THREE.MeshBasicMaterial({
+                    color: 0xff7700,
+                    transparent: true,
+                    opacity: 0.7
+                });
+                const trail = new THREE.Mesh(trailGeometry, trailMaterial);
+                trail.rotation.x = Math.PI / 2;
+                trail.position.z = -1;
+                projectile.add(trail);
 
-            // Create muzzle flash at cannon position
-            this.createMuzzleFlash(cannonWorldPos);
-        });
+                // Set projectile position to cannon's world position
+                projectile.position.copy(cannonWorldPos);
+                
+                // Use forward vector for projectile direction
+                const projectileSpeed = 200.0;
+                const initialUpwardVelocity = 5.0;
+                
+                projectile.userData = {
+                    velocity: {
+                        x: forwardVector.x * projectileSpeed,
+                        y: initialUpwardVelocity,
+                        z: forwardVector.z * projectileSpeed
+                    },
+                    lifetime: now + 3000,
+                    spawnTime: now,
+                    lastPosition: projectile.position.clone()
+                };
+
+                if (!this.gameState.projectiles) {
+                    this.gameState.projectiles = [];
+                }
+                
+                this.gameState.projectiles.push(projectile);
+                this.gameState.scene.add(projectile);
+
+                // Create muzzle flash at cannon position
+                this.createMuzzleFlash(cannonWorldPos);
+            });
+        }
     }
 
-    createMuzzleFlash(position) {
-        // Create flash geometry
-        const flashGeometry = new THREE.SphereGeometry(0.8, 16, 16);
+    createFlameEffect(position) {
+        // Create larger flash for flamethrower
+        const flashGeometry = new THREE.SphereGeometry(2.0, 16, 16);
         const flashMaterial = new THREE.MeshBasicMaterial({
-            color: 0xffff00,
+            color: 0xff2200,
             transparent: true,
-            opacity: 0.8
+            opacity: 0.9
         });
         const flash = new THREE.Mesh(flashGeometry, flashMaterial);
         flash.position.copy(position);
         this.gameState.scene.add(flash);
 
-        // Create point light
-        const light = new THREE.PointLight(0xff7700, 10, 5);
+        // Create intense point light
+        const light = new THREE.PointLight(0xff2200, 10, 15);
         light.position.copy(position);
         this.gameState.scene.add(light);
 
-        // Animate flash
-        let opacity = 0.8;
+        // Animate flash with slower fade
+        let opacity = 0.9;
         const fadeOut = setInterval(() => {
-            opacity -= 0.2;
+            opacity -= 0.05;
             flashMaterial.opacity = opacity;
+            light.intensity = 10 * (opacity / 0.9);
             if (opacity <= 0) {
                 clearInterval(fadeOut);
                 this.gameState.scene.remove(flash);
                 this.gameState.scene.remove(light);
             }
-        }, 20);
+        }, 50);
     }
 
     updateProjectiles() {
@@ -1133,54 +1255,75 @@ export class WorldFPS {
         this.gameState.projectiles = this.gameState.projectiles.filter(projectile => {
             if (!projectile || now > projectile.userData.lifetime) {
                 if (projectile) {
-                    // Simply remove the projectile without explosion
                     this.gameState.scene.remove(projectile);
                 }
                 return false;
             }
 
-            // Store last position for trail
-            projectile.userData.lastPosition = projectile.position.clone();
+            if (projectile.userData.type === 'flame') {
+                // Update flame effects
+                const timeAlive = (now - projectile.userData.spawnTime) / 1000;
+                
+                // Update position with faster movement
+                projectile.position.x += projectile.userData.velocity.x * deltaTime;
+                projectile.position.z += projectile.userData.velocity.z * deltaTime;
+                
+                // Add slight upward drift to flames
+                projectile.position.y += 2.0 * deltaTime;
+                
+                // Scale flames dynamically
+                const scaleFactor = 1.0 + (timeAlive * 0.8);
+                projectile.scale.set(scaleFactor, scaleFactor, 1.0 + (timeAlive * 0.2));
+                
+                // Fade out flames over time with longer persistence
+                projectile.traverse(child => {
+                    if (child.material && child.material.opacity) {
+                        child.material.opacity = Math.max(0, 0.9 - (timeAlive * 0.6));
+                    }
+                    if (child.type === 'PointLight') {
+                        child.intensity = Math.max(0, 15 * (1 - timeAlive * 0.7));
+                        child.distance = 20 + (timeAlive * 10);
+                    }
+                });
 
-            const timeAlive = (now - projectile.userData.spawnTime) / 1000;
-
-            // Update position with larger scale
-            projectile.position.x += projectile.userData.velocity.x * deltaTime;
-            projectile.position.z += projectile.userData.velocity.z * deltaTime;
-
-            // Update vertical movement with higher arc
-            if (timeAlive < 0.5) {
-                // Initial ascent phase - strong upward movement
-                projectile.position.y += projectile.userData.velocity.y * deltaTime;
-            } else if (timeAlive < 2.0) {
-                // Extended peak phase - maintain height
-                projectile.position.y += (projectile.userData.velocity.y * 0.1) * deltaTime;
+                return true;
             } else {
-                // Descent phase - gradual fall
-                projectile.userData.velocity.y += this.gameState.gravity * 0.5 * deltaTime;
-                projectile.position.y += projectile.userData.velocity.y * deltaTime;
-            }
+                // Regular projectile update logic
+                projectile.userData.lastPosition = projectile.position.clone();
 
-            // Update trail with smoother orientation
-            const trail = projectile.children[1];
-            if (trail) {
-                const direction = new THREE.Vector3().subVectors(
-                    projectile.position,
-                    projectile.userData.lastPosition
-                ).normalize();
-                trail.quaternion.setFromUnitVectors(
-                    new THREE.Vector3(0, 0, 1),
-                    direction
-                );
-            }
+                const timeAlive = (now - projectile.userData.spawnTime) / 1000;
 
-            // Ground collision - just remove the projectile without explosion
-            if (projectile.position.y <= 5.0) {
-                this.gameState.scene.remove(projectile);
-                return false;
-            }
+                projectile.position.x += projectile.userData.velocity.x * deltaTime;
+                projectile.position.z += projectile.userData.velocity.z * deltaTime;
 
-            return true;
+                if (timeAlive < 0.5) {
+                    projectile.position.y += projectile.userData.velocity.y * deltaTime;
+                } else if (timeAlive < 2.0) {
+                    projectile.position.y += (projectile.userData.velocity.y * 0.1) * deltaTime;
+                } else {
+                    projectile.userData.velocity.y += this.gameState.gravity * 0.5 * deltaTime;
+                    projectile.position.y += projectile.userData.velocity.y * deltaTime;
+                }
+
+                const trail = projectile.children[1];
+                if (trail) {
+                    const direction = new THREE.Vector3().subVectors(
+                        projectile.position,
+                        projectile.userData.lastPosition
+                    ).normalize();
+                    trail.quaternion.setFromUnitVectors(
+                        new THREE.Vector3(0, 0, 1),
+                        direction
+                    );
+                }
+
+                if (projectile.position.y <= 5.0) {
+                    this.gameState.scene.remove(projectile);
+                    return false;
+                }
+
+                return true;
+            }
         });
     }
 
@@ -1280,20 +1423,19 @@ export class WorldFPS {
             };
         }
 
-        // Get vehicle-specific characteristics from the selected vehicle
+        // Get vehicle characteristics
         const vehicleType = this.gameState.selectedVehicle.type;
         const characteristics = {
             maxSpeed: this.gameState.selectedVehicle.maxSpeed,
             acceleration: this.gameState.selectedVehicle.acceleration,
             deceleration: this.gameState.selectedVehicle.deceleration,
-            turnSpeed: this.gameState.selectedVehicle.turnSpeed * 0.02, // Scale down turn speed for better control
-            boostMultiplier: vehicleType === 'Muscle Car' ? 2.0 : 1.75, // Razorback gets better boost
+            turnSpeed: this.gameState.selectedVehicle.turnSpeed * 0.02,
+            boostMultiplier: vehicleType === 'Muscle Car' ? 2.0 : 1.75,
             boostAccelerationMultiplier: vehicleType === 'Muscle Car' ? 1.75 : 1.5,
-            reverseSpeedMultiplier: 0.6,
-            wheelRotationSpeed: vehicleType === 'Muscle Car' ? 3 : 2 // Faster wheel rotation for Razorback
+            reverseSpeedMultiplier: 0.6
         };
 
-        // Apply boost modifiers if boost is active
+        // Apply boost modifiers
         const currentMaxSpeed = this.controls.boost ? 
             characteristics.maxSpeed * characteristics.boostMultiplier : 
             characteristics.maxSpeed;
@@ -1311,48 +1453,45 @@ export class WorldFPS {
         } else if (this.controls.backward) {
             this.gameState.currentSpeed = Math.max(
                 (this.gameState.currentSpeed || 0) - currentAcceleration,
-                -characteristics.maxSpeed * characteristics.reverseSpeedMultiplier
+                -currentMaxSpeed * characteristics.reverseSpeedMultiplier
             );
         } else {
             // Apply deceleration when no input
-            if (this.gameState.currentSpeed > 0) {
-                this.gameState.currentSpeed = Math.max(0, this.gameState.currentSpeed - characteristics.deceleration);
+            if (Math.abs(this.gameState.currentSpeed) < characteristics.deceleration) {
+                this.gameState.currentSpeed = 0;
+            } else if (this.gameState.currentSpeed > 0) {
+                this.gameState.currentSpeed -= characteristics.deceleration;
             } else if (this.gameState.currentSpeed < 0) {
-                this.gameState.currentSpeed = Math.min(0, this.gameState.currentSpeed + characteristics.deceleration);
+                this.gameState.currentSpeed += characteristics.deceleration;
             }
         }
 
         // Update rotation based on input
         if (Math.abs(this.gameState.currentSpeed) > 0.01) {
-            // Reduce turn speed when boosting for better control
             const speedFactor = Math.abs(this.gameState.currentSpeed) / characteristics.maxSpeed;
             const currentTurnSpeed = this.controls.boost ? 
                 characteristics.turnSpeed * 0.7 : 
                 characteristics.turnSpeed;
 
-            // Apply turn speed based on vehicle type and speed
-            const turnMultiplier = vehicleType === 'Muscle Car' ? 
-                (1 + speedFactor * 0.5) : // Razorback turns better at higher speeds
-                (1 - speedFactor * 0.3);  // Other vehicles turn worse at higher speeds
+            // Invert turning when going backwards
+            const turnDirection = this.gameState.currentSpeed >= 0 ? 1 : -1;
 
             if (this.controls.left) {
-                model.rotation.y += currentTurnSpeed * turnMultiplier * (this.gameState.currentSpeed > 0 ? 1 : -1);
-                // Rotate front wheels for steering
+                model.rotation.y += currentTurnSpeed * turnDirection;
                 if (model.userData.wheelGroups) {
-                    const steeringAngle = Math.PI / 6 * turnMultiplier;
+                    const steeringAngle = Math.PI / 6;
                     model.userData.wheelGroups.frontLeft.rotation.y = steeringAngle;
                     model.userData.wheelGroups.frontRight.rotation.y = steeringAngle;
                 }
             } else if (this.controls.right) {
-                model.rotation.y -= currentTurnSpeed * turnMultiplier * (this.gameState.currentSpeed > 0 ? 1 : -1);
-                // Rotate front wheels for steering
+                model.rotation.y -= currentTurnSpeed * turnDirection;
                 if (model.userData.wheelGroups) {
-                    const steeringAngle = -Math.PI / 6 * turnMultiplier;
+                    const steeringAngle = -Math.PI / 6;
                     model.userData.wheelGroups.frontLeft.rotation.y = steeringAngle;
                     model.userData.wheelGroups.frontRight.rotation.y = steeringAngle;
                 }
             } else {
-                // Reset front wheel rotation when not turning
+                // Reset wheel rotation
                 if (model.userData.wheelGroups) {
                     model.userData.wheelGroups.frontLeft.rotation.y = 0;
                     model.userData.wheelGroups.frontRight.rotation.y = 0;
@@ -1360,8 +1499,9 @@ export class WorldFPS {
             }
         }
 
-        // Calculate movement vector based on rotation
+        // Calculate movement vector based on vehicle's forward direction
         if (this.gameState.currentSpeed !== 0) {
+            // Use model's rotation to determine forward direction
             const moveX = -Math.sin(model.rotation.y) * this.gameState.currentSpeed;
             const moveZ = -Math.cos(model.rotation.y) * this.gameState.currentSpeed;
 
@@ -1372,19 +1512,17 @@ export class WorldFPS {
             // Update model position
             model.position.set(
                 this.gameState.worldPosition.x,
-                0.1,
+                model.position.y, // Maintain current height
                 this.gameState.worldPosition.z
             );
 
-            // Rotate wheels based on movement
+            // Rotate wheels
             if (model.userData.wheels) {
-                const wheelRotation = characteristics.wheelRotationSpeed * this.gameState.currentSpeed;
-                
-                // Rotate all wheels around their local X axis
-                model.userData.wheels.frontLeft.rotation.x += wheelRotation;
-                model.userData.wheels.frontRight.rotation.x -= wheelRotation;
-                model.userData.wheels.backLeft.rotation.x += wheelRotation;
-                model.userData.wheels.backRight.rotation.x -= wheelRotation;
+                const wheelRotation = 3 * this.gameState.currentSpeed;
+                Object.values(model.userData.wheels).forEach((wheel, index) => {
+                    // Alternate rotation direction for left/right wheels
+                    wheel.rotation.x += wheelRotation * (index % 2 === 0 ? 1 : -1);
+                });
             }
 
             // Update map position
@@ -1404,7 +1542,7 @@ export class WorldFPS {
         // Update last update time
         this.gameState.lastUpdate = Date.now();
 
-        // Debug logging with proper values
+        // Debug logging
         if (this.gameState.debug) {
             console.log('Vehicle Movement:', {
                 vehicleType: vehicleType,
@@ -1870,30 +2008,30 @@ export class WorldFPS {
 
     updateVehiclePhysics(delta) {
         // ... existing code ...
-        if (this.currentVehicle.type === 'Sports Bike') {
-            // Enhanced lean angles for motorcycle
-            const maxLeanAngle = 45 * (Math.PI / 180); // 45 degrees max lean
-            const leanSpeed = 3.0; // How quickly the bike leans into turns
+        if (this.currentVehicle.type === 'Modified Van') {
+            // Heavy van physics
+            const maxTiltAngle = 15 * (Math.PI / 180); // 15 degrees max tilt
+            const tiltSpeed = 1.5; // Slower tilt for heavy vehicle
             
-            // Calculate lean based on turn angle and speed
-            const targetLean = -this.currentTurnAngle * (this.currentSpeed / this.currentVehicle.maxSpeed);
-            const leanAngle = Math.max(-maxLeanAngle, Math.min(maxLeanAngle, targetLean));
+            // Calculate tilt based on turn angle and speed
+            const targetTilt = -this.currentTurnAngle * (this.currentSpeed / this.currentVehicle.maxSpeed);
+            const tiltAngle = Math.max(-maxTiltAngle, Math.min(maxTiltAngle, targetTilt));
             
-            // Apply lean smoothly
+            // Apply tilt smoothly
             this.vehicleModel.rotation.z = THREE.MathUtils.lerp(
                 this.vehicleModel.rotation.z,
-                leanAngle,
-                leanSpeed * delta
+                tiltAngle,
+                tiltSpeed * delta
             );
             
-            // Enhanced turning at higher speeds
+            // Reduced turning at higher speeds
             if (Math.abs(this.currentSpeed) > this.currentVehicle.maxSpeed * 0.5) {
-                this.currentTurnAngle *= 1.2; // 20% sharper turns at high speed
+                this.currentTurnAngle *= 0.8; // 20% reduced turning at high speed
             }
             
-            // Quick direction changes
+            // Gradual steering response
             if (this.controls.left || this.controls.right) {
-                this.currentTurnAngle *= 1.15; // 15% more responsive steering
+                this.currentTurnAngle *= 0.9; // 10% reduced steering response
             }
         }
         // ... existing code ...

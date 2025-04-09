@@ -70,10 +70,10 @@ export const VEHICLES = {
         type: 'Modified Van',
         description: 'A scrappy, unconventional vehicle with trap-based combat.',
         health: 100,
-        maxSpeed: 0.39, // 140 km/h normalized
-        acceleration: 0.01,
-        deceleration: 0.006,
-        turnSpeed: 2,
+        maxSpeed: 0.35, // 126 km/h normalized (reduced from 140)
+        acceleration: 0.008, // Slower acceleration (reduced from 0.01)
+        deceleration: 0.005, // Faster deceleration (reduced from 0.006)
+        turnSpeed: 1.8, // Reduced from 2.0 for more realistic van handling
         weaponType: 'Flamethrower',
         damage: 10, // damage per second
         projectileSpeed: 0.3,
