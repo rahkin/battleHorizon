@@ -90,9 +90,21 @@ export class WorldFPS {
             worldPosition: { x: 0, z: 0 },
             cameraAngle: 0,
             targetCameraAngle: 0,
-            currentSpeed: null,
-            currentTurnAngle: null,
-            currentTilt: null
+            currentSpeed: 0,
+            currentTurnAngle: 0,
+            currentTilt: 0,
+            debug: true
+        };
+
+        // Initialize controls
+        this.controls = {
+            forward: false,
+            backward: false,
+            left: false,
+            right: false,
+            shoot: false,
+            boost: false,
+            drift: false
         };
 
         try {
@@ -121,7 +133,7 @@ export class WorldFPS {
             // Initialize HUD
             this.initializeHUD();
             
-            // Set up event listeners
+            // Set up event listeners for controls
             this.setupEventListeners();
 
             // Start game loop
@@ -162,6 +174,16 @@ export class WorldFPS {
         
         // Set initial rotation - only around Y axis
         model.rotation.set(0, 0, 0);
+        
+        // Initialize orientation vectors if they don't exist
+        if (!model.userData) {
+            model.userData = {};
+        }
+        
+        // Ensure orientation vectors are properly initialized
+        model.userData.forward = new THREE.Vector3(0, 0, 1);
+        model.userData.right = new THREE.Vector3(1, 0, 0);
+        model.userData.up = new THREE.Vector3(0, 1, 0);
         
         // Enable shadows for all meshes in the model
         model.traverse((child) => {
@@ -208,12 +230,12 @@ export class WorldFPS {
         
         // Aerodynamic cabin - moved forward
         const cabinGeometry = new THREE.BoxGeometry(5, 2, 6);
-        const cabinMaterial = new THREE.MeshStandardMaterial({
+            const cabinMaterial = new THREE.MeshStandardMaterial({
             color: 0x1a1a1a,
             metalness: 0.9,
             roughness: 0.1
-        });
-        const cabin = new THREE.Mesh(cabinGeometry, cabinMaterial);
+            });
+            const cabin = new THREE.Mesh(cabinGeometry, cabinMaterial);
         cabin.position.y = 2.75;
         cabin.position.z = 1;
 
@@ -230,7 +252,7 @@ export class WorldFPS {
         
         // Add wheels
         const wheelGeometry = new THREE.CylinderGeometry(1, 1, 0.8, 16);
-        const wheelMaterial = new THREE.MeshStandardMaterial({
+            const wheelMaterial = new THREE.MeshStandardMaterial({
             color: 0x1a1a1a,
             metalness: 0.5,
             roughness: 0.7
@@ -307,44 +329,117 @@ export class WorldFPS {
     createIroncladModel() {
         const model = new THREE.Group();
         
-        // Heavy armored body
-        const bodyGeometry = new THREE.BoxGeometry(8, 3, 14);
+        // Heavy armored body - scaled down by half
+        const bodyGeometry = new THREE.BoxGeometry(4, 1.5, 7);
         const bodyMaterial = new THREE.MeshStandardMaterial({
             color: 0x4a4a4a,
             metalness: 0.6,
             roughness: 0.8
         });
         const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+        body.position.y = 0.75;
         
-        // Reinforced cabin
-        const cabinGeometry = new THREE.BoxGeometry(6, 2.5, 6);
+        // Reinforced cabin - scaled down by half
+        const cabinGeometry = new THREE.BoxGeometry(3, 1.25, 3);
         const cabinMaterial = new THREE.MeshStandardMaterial({
             color: 0x333333,
             metalness: 0.7,
             roughness: 0.6
         });
         const cabin = new THREE.Mesh(cabinGeometry, cabinMaterial);
-        cabin.position.y = 2.75;
-        cabin.position.z = -2;
+        cabin.position.y = 1.625;
+        cabin.position.z = -1;
+
+        // Create wheel groups for steering
+        const frontLeftWheelGroup = new THREE.Group();
+        const frontRightWheelGroup = new THREE.Group();
+        const backLeftWheelGroup = new THREE.Group();
+        const backRightWheelGroup = new THREE.Group();
         
-        // Heavy mortar
+        // Position the wheel groups - front wheels at the front, back wheels at the back
+        frontLeftWheelGroup.position.set(2.25, 0.75, 2.5);
+        frontRightWheelGroup.position.set(-2.25, 0.75, 2.5);
+        backLeftWheelGroup.position.set(2.25, 0.75, -2.5);
+        backRightWheelGroup.position.set(-2.25, 0.75, -2.5);
+        
+        model.add(frontLeftWheelGroup);
+        model.add(frontRightWheelGroup);
+        model.add(backLeftWheelGroup);
+        model.add(backRightWheelGroup);
+        
+        // Add wheels - scaled down by half
+        const wheelGeometry = new THREE.CylinderGeometry(0.75, 0.75, 0.6, 16);
+        const wheelMaterial = new THREE.MeshStandardMaterial({
+            color: 0x1a1a1a,
+            metalness: 0.5,
+            roughness: 0.7
+        });
+
+        // Create wheels with proper orientation
+        const frontLeftWheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
+        frontLeftWheel.rotation.z = Math.PI / 2;
+        frontLeftWheelGroup.add(frontLeftWheel);
+        
+        const frontRightWheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
+        frontRightWheel.rotation.z = Math.PI / 2;
+        frontRightWheelGroup.add(frontRightWheel);
+
+        const backLeftWheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
+        backLeftWheel.rotation.z = Math.PI / 2;
+        backLeftWheelGroup.add(backLeftWheel);
+        
+        const backRightWheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
+        backRightWheel.rotation.z = Math.PI / 2;
+        backRightWheelGroup.add(backRightWheel);
+        
+        // Heavy mortar - scaled down by half
         const mortarBase = new THREE.Mesh(
-            new THREE.CylinderGeometry(1.5, 2, 2),
+            new THREE.CylinderGeometry(0.75, 1, 1),
             new THREE.MeshStandardMaterial({ color: 0x333333 })
         );
-        mortarBase.position.set(0, 3.5, 2);
+        mortarBase.position.set(0, 2.25, 1);
         
         const mortarBarrel = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.8, 1, 4),
+            new THREE.CylinderGeometry(0.4, 0.5, 2),
             new THREE.MeshStandardMaterial({ color: 0x1a1a1a })
         );
-        mortarBarrel.position.set(0, 4.5, 2);
+        mortarBarrel.position.set(0, 2.75, 1);
         mortarBarrel.rotation.x = -Math.PI / 4;
+        
+        // Add direction indicator - scaled down by half
+        const directionArrow = new THREE.Mesh(
+            new THREE.ConeGeometry(0.2, 0.6, 8),
+            new THREE.MeshStandardMaterial({ color: 0xff0000 })
+        );
+        directionArrow.rotation.x = -Math.PI / 2;
+        directionArrow.position.set(0, 2.25, 3);
         
         model.add(body);
         model.add(cabin);
         model.add(mortarBase);
         model.add(mortarBarrel);
+        model.add(directionArrow);
+        
+        // Store references and orientation data
+        model.userData = {
+            wheels: {
+                frontLeft: frontLeftWheel,
+                frontRight: frontRightWheel,
+                backLeft: backLeftWheel,
+                backRight: backRightWheel
+            },
+            wheelGroups: {
+                frontLeft: frontLeftWheelGroup,
+                frontRight: frontRightWheelGroup,
+                backLeft: backLeftWheelGroup,
+                backRight: backRightWheelGroup
+            },
+            cannons: [mortarBarrel],
+            directionArrow: directionArrow,
+            forward: new THREE.Vector3(0, 0, 1),
+            right: new THREE.Vector3(1, 0, 0),
+            up: new THREE.Vector3(0, 1, 0)
+        };
         
         return model;
     }
@@ -360,6 +455,7 @@ export class WorldFPS {
             roughness: 0.1
         });
         const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+        body.position.y = 1.0; // Raise body to accommodate wheels
         
         // Front fairing
         const fairingGeometry = new THREE.ConeGeometry(1.5, 3, 4);
@@ -371,27 +467,76 @@ export class WorldFPS {
         const fairing = new THREE.Mesh(fairingGeometry, fairingMaterial);
         fairing.rotation.x = -Math.PI / 2;
         fairing.position.set(0, 1, -3);
+
+        // Create wheel groups for steering
+        const frontWheelGroup = new THREE.Group();
+        const backWheelGroup = new THREE.Group();
         
-        // Wheels
+        // Position the wheel groups relative to body
+        frontWheelGroup.position.set(0, 1.0, -3);
+        backWheelGroup.position.set(0, 1.0, 3);
+        
+        model.add(frontWheelGroup);
+        model.add(backWheelGroup);
+        
+        // Add wheels - larger than Razorback's wheels
         const wheelGeometry = new THREE.CylinderGeometry(1.2, 1.2, 0.5, 16);
         const wheelMaterial = new THREE.MeshStandardMaterial({
             color: 0x1a1a1a,
             metalness: 0.5,
             roughness: 0.7
         });
-        
+
+        // Front wheel - added to its group
         const frontWheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
         frontWheel.rotation.z = Math.PI / 2;
-        frontWheel.position.set(0, 0, -3);
+        frontWheelGroup.add(frontWheel);
         
+        // Back wheel - added to its group
         const backWheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
         backWheel.rotation.z = Math.PI / 2;
-        backWheel.position.set(0, 0, 3);
+        backWheelGroup.add(backWheel);
+        
+        // Rocket launcher
+        const launcherBase = new THREE.Mesh(
+            new THREE.BoxGeometry(0.8, 0.8, 2),
+            new THREE.MeshStandardMaterial({ color: 0x333333 })
+        );
+        launcherBase.position.set(0, 2, 0);
+        
+        const launcherBarrel = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.3, 0.4, 3),
+            new THREE.MeshStandardMaterial({ color: 0x1a1a1a })
+        );
+        launcherBarrel.position.set(0, 2.5, 0);
+        launcherBarrel.rotation.x = Math.PI / 2;
+        
+        // Add direction indicator (small arrow)
+        const directionArrow = new THREE.Mesh(
+            new THREE.ConeGeometry(0.3, 1, 8),
+            new THREE.MeshStandardMaterial({ color: 0xff0000 })
+        );
+        directionArrow.rotation.x = -Math.PI / 2;
+        directionArrow.position.set(0, 2, 4);
         
         model.add(body);
         model.add(fairing);
-        model.add(frontWheel);
-        model.add(backWheel);
+        model.add(launcherBase);
+        model.add(launcherBarrel);
+        model.add(directionArrow);
+        
+        // Store references and orientation data
+        model.userData = {
+            frontWheels: {
+                left: frontWheelGroup,
+                right: frontWheelGroup // Same group for both sides on a bike
+            },
+            cannons: [launcherBarrel],
+            directionArrow: directionArrow,
+            forward: new THREE.Vector3(0, 0, 1),
+            right: new THREE.Vector3(1, 0, 0),
+            up: new THREE.Vector3(0, 1, 0)
+        };
         
         return model;
     }
@@ -407,32 +552,61 @@ export class WorldFPS {
             roughness: 0.9
         });
         const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+        body.position.y = 2.0; // Raise body to accommodate wheels
         
-        // Add random dents and attachments
-        for (let i = 0; i < 5; i++) {
-            const junkGeometry = new THREE.BoxGeometry(
-                Math.random() * 2 + 1,
-                Math.random() * 2 + 1,
-                Math.random() * 2 + 1
-            );
-            const junkMaterial = new THREE.MeshStandardMaterial({
-                color: 0x666666,
-                metalness: 0.3,
-                roughness: 0.9
-            });
-            const junk = new THREE.Mesh(junkGeometry, junkMaterial);
-            junk.position.set(
-                (Math.random() - 0.5) * 4,
-                2 + Math.random() * 2,
-                (Math.random() - 0.5) * 8
-            );
-            junk.rotation.set(
-                Math.random() * Math.PI,
-                Math.random() * Math.PI,
-                Math.random() * Math.PI
-            );
-            model.add(junk);
-        }
+        // Reinforced cabin
+        const cabinGeometry = new THREE.BoxGeometry(6, 3, 5);
+        const cabinMaterial = new THREE.MeshStandardMaterial({
+            color: 0x4a4a4a,
+            metalness: 0.4,
+            roughness: 0.8
+        });
+        const cabin = new THREE.Mesh(cabinGeometry, cabinMaterial);
+        cabin.position.y = 3.5;
+        cabin.position.z = -2;
+
+        // Create wheel groups for steering
+        const frontLeftWheelGroup = new THREE.Group();
+        const frontRightWheelGroup = new THREE.Group();
+        const backLeftWheelGroup = new THREE.Group();
+        const backRightWheelGroup = new THREE.Group();
+        
+        // Position the wheel groups relative to body
+        frontLeftWheelGroup.position.set(3.5, 2.0, 5);
+        frontRightWheelGroup.position.set(-3.5, 2.0, 5);
+        backLeftWheelGroup.position.set(3.5, 2.0, -5);
+        backRightWheelGroup.position.set(-3.5, 2.0, -5);
+        
+        model.add(frontLeftWheelGroup);
+        model.add(frontRightWheelGroup);
+        model.add(backLeftWheelGroup);
+        model.add(backRightWheelGroup);
+        
+        // Add wheels - larger than Razorback's wheels
+        const wheelGeometry = new THREE.CylinderGeometry(1.5, 1.5, 1.2, 16);
+        const wheelMaterial = new THREE.MeshStandardMaterial({
+            color: 0x1a1a1a,
+            metalness: 0.5,
+            roughness: 0.7
+        });
+
+        // Front wheels - added to their respective groups
+        const frontLeftWheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
+        frontLeftWheel.rotation.z = Math.PI / 2;
+        frontLeftWheelGroup.add(frontLeftWheel);
+        
+        const frontRightWheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
+        frontRightWheel.rotation.z = Math.PI / 2;
+        frontRightWheelGroup.add(frontRightWheel);
+
+        // Back wheels - added to their respective groups
+        const backLeftWheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
+        backLeftWheel.rotation.z = Math.PI / 2;
+        backLeftWheelGroup.add(backLeftWheel);
+        
+        const backRightWheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
+        backRightWheel.rotation.z = Math.PI / 2;
+        backRightWheelGroup.add(backRightWheel);
         
         // Flamethrower
         const tankGeometry = new THREE.CylinderGeometry(1, 1, 3);
@@ -450,9 +624,32 @@ export class WorldFPS {
         nozzle.position.set(3, 2, 4);
         nozzle.rotation.x = Math.PI / 2;
         
+        // Add direction indicator (small arrow)
+        const directionArrow = new THREE.Mesh(
+            new THREE.ConeGeometry(0.4, 1.2, 8),
+            new THREE.MeshStandardMaterial({ color: 0xff0000 })
+        );
+        directionArrow.rotation.x = -Math.PI / 2;
+        directionArrow.position.set(0, 4.5, 6);
+        
         model.add(body);
+        model.add(cabin);
         model.add(tank);
         model.add(nozzle);
+        model.add(directionArrow);
+        
+        // Store references and orientation data
+        model.userData = {
+            frontWheels: {
+                left: frontLeftWheelGroup,
+                right: frontRightWheelGroup
+            },
+            cannons: [nozzle],
+            directionArrow: directionArrow,
+            forward: new THREE.Vector3(0, 0, 1),
+            right: new THREE.Vector3(1, 0, 0),
+            up: new THREE.Vector3(0, 1, 0)
+        };
         
         return model;
     }
@@ -464,13 +661,13 @@ export class WorldFPS {
                 const initialPosition = [121.0509, 14.5508];
                 
                 this.gameState.map = new mapboxgl.Map({
-                    container: 'map',
-                    style: 'mapbox://styles/mapbox/streets-v12',
+            container: 'map',
+            style: 'mapbox://styles/mapbox/streets-v12',
                     center: initialPosition,
                     zoom: 20,
                     pitch: 80, // Set high pitch for driver's perspective
-                    bearing: 0,
-                    antialias: true,
+            bearing: 0,
+            antialias: true,
                     renderWorldCopies: false
                 });
 
@@ -484,23 +681,23 @@ export class WorldFPS {
                     try {
                         // Add 3D terrain with reduced exaggeration
                         this.gameState.map.addSource('mapbox-dem', {
-                            'type': 'raster-dem',
-                            'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
-                            'tileSize': 512,
-                            'maxzoom': 14
-                        });
+                'type': 'raster-dem',
+                'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
+                'tileSize': 512,
+                'maxzoom': 14
+            });
 
                         this.gameState.map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 0.3 });
                         
                         // Enhanced building layer with better colors
                         this.gameState.map.addLayer({
-                            'id': '3d-buildings',
+                'id': '3d-buildings',
                             'source': 'composite',
-                            'source-layer': 'building',
+                'source-layer': 'building',
                             'filter': ['==', 'extrude', 'true'],
-                            'type': 'fill-extrusion',
-                            'minzoom': 15,
-                            'paint': {
+                'type': 'fill-extrusion',
+                'minzoom': 15,
+                'paint': {
                                 'fill-extrusion-color': '#ecf0f1',
                                 'fill-extrusion-height': ['get', 'height'],
                                 'fill-extrusion-base': ['get', 'min_height'],
@@ -864,7 +1061,7 @@ export class WorldFPS {
             if (!this.gameState.projectiles) {
                 this.gameState.projectiles = [];
             }
-
+            
             this.gameState.projectiles.push(projectile);
             this.gameState.scene.add(projectile);
 
@@ -1048,143 +1245,114 @@ export class WorldFPS {
     updatePlayerPosition() {
         if (!this.gameState.vehicleModel || !this.controls) return;
 
-        const vehicleRotation = this.gameState.vehicleModel.rotation.y;
-        const vehicle = this.gameState.selectedVehicle;
-        
-        // Get vehicle-specific characteristics
-        const characteristics = this.getVehicleCharacteristics(vehicle);
-        
-        // Initialize movement variables
-        let moveX = 0;
-        let moveZ = 0;
-        let currentSpeed = this.gameState.currentSpeed || 0;
-        let currentTurnRate = 0;
-        
-        // Update vehicle orientation vectors
+        // Get current state
         const model = this.gameState.vehicleModel;
-        model.userData.forward.set(0, 0, 1).applyAxisAngle(new THREE.Vector3(0, 1, 0), vehicleRotation);
-        model.userData.right.set(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), vehicleRotation);
+        const deltaTime = Math.min((Date.now() - this.gameState.lastUpdate) / 1000, 0.1);
         
-        // Apply acceleration/deceleration
+        // Initialize position if not exists
+        if (!this.gameState.worldPosition) {
+            this.gameState.worldPosition = {
+                x: 0,
+                z: 0
+            };
+        }
+
+        // Get vehicle characteristics for Ironclad
+        const characteristics = {
+            maxSpeed: 0.4,
+            acceleration: 0.01,
+            deceleration: 0.008,
+            turnSpeed: 0.02,
+            boostMultiplier: 1.75, // Speed multiplier when boosting
+            boostAccelerationMultiplier: 1.5 // Acceleration multiplier when boosting
+        };
+
+        // Apply boost modifiers if boost is active
+        const currentMaxSpeed = this.controls.boost ? 
+            characteristics.maxSpeed * characteristics.boostMultiplier : 
+            characteristics.maxSpeed;
+        
+        const currentAcceleration = this.controls.boost ? 
+            characteristics.acceleration * characteristics.boostAccelerationMultiplier : 
+            characteristics.acceleration;
+
+        // Update speed based on input
         if (this.controls.forward) {
-            currentSpeed = Math.min(
-                currentSpeed + (characteristics.acceleration * characteristics.forwardBias),
-                this.controls.boost ? characteristics.maxSpeed * 1.5 : characteristics.maxSpeed
+            this.gameState.currentSpeed = Math.min(
+                (this.gameState.currentSpeed || 0) + currentAcceleration,
+                currentMaxSpeed
             );
         } else if (this.controls.backward) {
-            currentSpeed = Math.max(
-                currentSpeed - (characteristics.acceleration * characteristics.reverseBias),
-                -characteristics.maxSpeed * characteristics.reverseSpeedMultiplier
+            this.gameState.currentSpeed = Math.max(
+                (this.gameState.currentSpeed || 0) - currentAcceleration,
+                -currentMaxSpeed * 0.6
             );
         } else {
-            currentSpeed *= (1 - characteristics.rollingResistance);
+            // Apply deceleration when no input
+            if (this.gameState.currentSpeed > 0) {
+                this.gameState.currentSpeed = Math.max(0, this.gameState.currentSpeed - characteristics.deceleration);
+            } else if (this.gameState.currentSpeed < 0) {
+                this.gameState.currentSpeed = Math.min(0, this.gameState.currentSpeed + characteristics.deceleration);
+            }
         }
 
-        // Apply natural deceleration
-        if (Math.abs(currentSpeed) > 0.01) {
-            const decelRate = currentSpeed > 0 ? characteristics.deceleration : characteristics.deceleration * 0.5;
-            currentSpeed *= (1 - decelRate);
-        } else {
-            currentSpeed = 0;
-        }
+        // Update rotation based on input
+        if (Math.abs(this.gameState.currentSpeed) > 0.01) {
+            // Reduce turn speed when boosting for better control
+            const currentTurnSpeed = this.controls.boost ? 
+                characteristics.turnSpeed * 0.7 : 
+                characteristics.turnSpeed;
 
-        // Calculate turn rate and wheel steering
-        if (Math.abs(currentSpeed) > 0.1) {
-            const speedFactor = Math.abs(currentSpeed) / characteristics.maxSpeed;
-            const turnMultiplier = currentSpeed > 0 ? 1 : -1;
-            
-            // Calculate steering angle - reduced for more realistic turning
-            let steeringAngle = 0;
             if (this.controls.left) {
-                currentTurnRate = characteristics.turnSpeed * 
-                    turnMultiplier * 
-                    characteristics.turnSpeedCurve(speedFactor);
-                steeringAngle = Math.PI / 6; // 30 degrees - more realistic
+                model.rotation.y += currentTurnSpeed * (this.gameState.currentSpeed > 0 ? 1 : -1);
+                // Rotate front wheels for steering
+                if (model.userData.wheelGroups) {
+                    model.userData.wheelGroups.frontLeft.rotation.y = Math.PI / 6;
+                    model.userData.wheelGroups.frontRight.rotation.y = Math.PI / 6;
+                }
             } else if (this.controls.right) {
-                currentTurnRate = -characteristics.turnSpeed * 
-                    turnMultiplier * 
-                    characteristics.turnSpeedCurve(speedFactor);
-                steeringAngle = -Math.PI / 6; // -30 degrees - more realistic
-            }
-
-            // Apply steering to front wheels with smooth interpolation
-            if (this.gameState.vehicleModel.userData.frontWheels) {
-                const leftWheel = this.gameState.vehicleModel.userData.frontWheels.left;
-                const rightWheel = this.gameState.vehicleModel.userData.frontWheels.right;
-                
-                if (leftWheel && rightWheel) {
-                    // Get current rotation
-                    const currentLeftRotation = leftWheel.rotation.y || 0;
-                    const currentRightRotation = rightWheel.rotation.y || 0;
-                    
-                    // Smoothly interpolate to target angle
-                    const interpolationFactor = 0.15; // Adjust for smoother or faster turning
-                    
-                    leftWheel.rotation.y = currentLeftRotation + 
-                        (steeringAngle - currentLeftRotation) * interpolationFactor;
-                    rightWheel.rotation.y = currentRightRotation + 
-                        (steeringAngle - currentRightRotation) * interpolationFactor;
+                model.rotation.y -= currentTurnSpeed * (this.gameState.currentSpeed > 0 ? 1 : -1);
+                // Rotate front wheels for steering
+                if (model.userData.wheelGroups) {
+                    model.userData.wheelGroups.frontLeft.rotation.y = -Math.PI / 6;
+                    model.userData.wheelGroups.frontRight.rotation.y = -Math.PI / 6;
                 }
-            }
-        } else {
-            // Return wheels to neutral position when not moving
-            if (this.gameState.vehicleModel.userData.frontWheels) {
-                const leftWheel = this.gameState.vehicleModel.userData.frontWheels.left;
-                const rightWheel = this.gameState.vehicleModel.userData.frontWheels.right;
-                
-                if (leftWheel && rightWheel) {
-                    // Smoothly return to center
-                    const returnFactor = 0.1;
-                    leftWheel.rotation.y *= (1 - returnFactor);
-                    rightWheel.rotation.y *= (1 - returnFactor);
+            } else {
+                // Reset front wheel rotation when not turning
+                if (model.userData.wheelGroups) {
+                    model.userData.wheelGroups.frontLeft.rotation.y = 0;
+                    model.userData.wheelGroups.frontRight.rotation.y = 0;
                 }
             }
         }
 
-        // Apply turn rate with smoothing
-        this.gameState.currentTurnAngle = (this.gameState.currentTurnAngle || 0) * 0.8 + currentTurnRate * 0.2;
-        this.gameState.vehicleModel.rotation.y += this.gameState.currentTurnAngle;
+        // Calculate movement vector based on rotation
+        if (this.gameState.currentSpeed !== 0) {
+            const moveX = -Math.sin(model.rotation.y) * this.gameState.currentSpeed;
+            const moveZ = -Math.cos(model.rotation.y) * this.gameState.currentSpeed;
 
-        // Calculate movement vector
-        moveX = -Math.sin(vehicleRotation) * currentSpeed;
-        moveZ = -Math.cos(vehicleRotation) * currentSpeed;
-
-        // Apply suspension and tilt effects
-        if (Math.abs(currentSpeed) > 0.1) {
-            const tiltAmount = (currentTurnRate * characteristics.bodyRoll) * (currentSpeed / characteristics.maxSpeed);
-            const targetTilt = new THREE.Vector3(
-                characteristics.suspensionTravel * (currentSpeed / characteristics.maxSpeed) * 0.1,
-                0,
-                tiltAmount
-            );
-            
-            // Smooth tilt transition
-            if (!this.gameState.currentTilt) {
-                this.gameState.currentTilt = new THREE.Vector3();
-            }
-            
-            this.gameState.currentTilt.lerp(targetTilt, characteristics.suspensionStiffness);
-            
-            // Apply tilt to vehicle model
-            this.gameState.vehicleModel.rotation.x = this.gameState.currentTilt.x;
-            this.gameState.vehicleModel.rotation.z = this.gameState.currentTilt.z;
-        } else {
-            // Return to neutral position when stationary
-            if (this.gameState.currentTilt) {
-                this.gameState.currentTilt.lerp(new THREE.Vector3(0, 0, 0), characteristics.suspensionStiffness);
-                this.gameState.vehicleModel.rotation.x = this.gameState.currentTilt.x;
-                this.gameState.vehicleModel.rotation.z = this.gameState.currentTilt.z;
-            }
-        }
-
-        // Update position
-        if (moveX !== 0 || moveZ !== 0) {
+            // Update world position
             this.gameState.worldPosition.x += moveX;
             this.gameState.worldPosition.z += moveZ;
 
-            this.gameState.vehicleModel.position.x = this.gameState.worldPosition.x;
-            this.gameState.vehicleModel.position.y = 0.1; // Base height
-            this.gameState.vehicleModel.position.z = this.gameState.worldPosition.z;
+            // Update model position
+            model.position.set(
+                this.gameState.worldPosition.x,
+                0.1,
+                this.gameState.worldPosition.z
+            );
+
+            // Rotate wheels based on movement
+            if (model.userData.wheels) {
+                const wheelRotationSpeed = 2;
+                const wheelRotation = wheelRotationSpeed * this.gameState.currentSpeed;
+                
+                // Rotate all wheels around their local X axis
+                model.userData.wheels.frontLeft.rotation.x += wheelRotation;
+                model.userData.wheels.frontRight.rotation.x -= wheelRotation;
+                model.userData.wheels.backLeft.rotation.x += wheelRotation;
+                model.userData.wheels.backRight.rotation.x -= wheelRotation;
+            }
 
             // Update map position
             if (this.gameState.map) {
@@ -1194,21 +1362,30 @@ export class WorldFPS {
                 
                 const newLng = startLng + this.gameState.worldPosition.x * scale;
                 const newLat = startLat - this.gameState.worldPosition.z * scale;
+                
                 this.gameState.map.setCenter([newLng, newLat]);
-                this.gameState.map.setBearing(-(vehicleRotation * 180 / Math.PI));
+                this.gameState.map.setBearing(-(model.rotation.y * 180 / Math.PI));
             }
         }
 
-        // Store current speed for next frame
-        this.gameState.currentSpeed = currentSpeed;
+        // Update last update time
+        this.gameState.lastUpdate = Date.now();
 
-        // Debug logging
+        // Debug logging with proper values
         if (this.gameState.debug) {
-            this.log.debug('Vehicle Movement:', {
-                speed: currentSpeed,
-                turnRate: currentTurnRate,
-                position: this.gameState.vehicleModel.position,
-                rotation: this.gameState.vehicleModel.rotation
+            console.log('Vehicle Movement:', {
+                speed: this.gameState.currentSpeed,
+                maxSpeed: currentMaxSpeed,
+                boost: this.controls.boost,
+                turnRate: characteristics.turnSpeed,
+                position: {
+                    x: model.position.x,
+                    y: model.position.y,
+                    z: model.position.z
+                },
+                rotation: {
+                    y: model.rotation.y
+                }
             });
         }
     }
@@ -1227,6 +1404,9 @@ export class WorldFPS {
             forwardBias: 1.0,
             reverseBias: 0.7,
             reverseSpeedMultiplier: 0.6,
+            driftFactor: 0.85,        // How much grip is lost during drift
+            driftRecovery: 0.02,      // How quickly grip recovers after drift
+            lateralFriction: 1.0,     // Current grip level (modified during drift)
             turnSpeedCurve: (speedFactor) => {
                 // Default turn speed curve - reduces turn rate at high speeds
                 return 0.5 + (1 - speedFactor) * 0.5;
@@ -1244,6 +1424,8 @@ export class WorldFPS {
                     turnSpeed: 0.04,
                     bodyRoll: 0.2,
                     suspensionStiffness: 0.15,
+                    driftFactor: 0.7,        // Better drift control
+                    driftRecovery: 0.015,    // Slower grip recovery for longer drifts
                     turnSpeedCurve: (speedFactor) => {
                         // Razorback maintains better turning at high speeds
                         return 0.7 + (1 - speedFactor) * 0.3;
@@ -1327,9 +1509,9 @@ export class WorldFPS {
                         material.color.multiplyScalar(0.5);
                         break;
                 }
-            }
-        });
-    }
+                }
+            });
+        }
 
     add3DObjects() {
         console.log('Adding 3D objects...');
@@ -1362,8 +1544,11 @@ export class WorldFPS {
         this.gameState.camera.lookAt(0, 1, 50);
         
         // Create renderer with proper settings
+        const gameCanvas = document.getElementById('game-canvas');
+        gameCanvas.willReadFrequently = true;
+        
         this.gameState.renderer = new THREE.WebGLRenderer({
-            canvas: document.getElementById('game-canvas'),
+            canvas: gameCanvas,
             antialias: true,
             alpha: true
         });
@@ -1396,16 +1581,6 @@ export class WorldFPS {
             mapContainer.style.pointerEvents = 'none';
         }
 
-        // Initialize controls
-        this.controls = {
-            forward: false,
-            backward: false,
-            left: false,
-            right: false,
-            shoot: false,
-            boost: false
-        };
-
         // Handle window resize
         window.addEventListener('resize', () => {
             this.gameState.camera.aspect = window.innerWidth / window.innerHeight;
@@ -1425,7 +1600,8 @@ export class WorldFPS {
             'ArrowDown': 'backward',
             'ArrowLeft': 'left',
             'ArrowRight': 'right',
-            'ShiftLeft': 'boost'
+            'ShiftLeft': 'boost',
+            'Space': 'drift'
         };
 
         // Keyboard down handler
@@ -1434,6 +1610,7 @@ export class WorldFPS {
             if (control && this.controls) {
                 e.preventDefault();
                 this.controls[control] = true;
+                console.log('Key pressed:', e.code, 'Control:', control, 'Controls state:', this.controls);
             }
         });
 
@@ -1443,6 +1620,7 @@ export class WorldFPS {
             if (control && this.controls) {
                 e.preventDefault();
                 this.controls[control] = false;
+                console.log('Key released:', e.code, 'Control:', control, 'Controls state:', this.controls);
             }
         });
 
@@ -1660,3 +1838,4 @@ export class WorldFPS {
 window.onload = () => {
     window.game = new WorldFPS();
 };
+
