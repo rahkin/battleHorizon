@@ -158,15 +158,15 @@ export class WorldFPS {
         
         // Main body
         const bodyGeometry = new THREE.BoxGeometry(1.5, 0.5, 3);
-        const bodyMaterial = new THREE.MeshStandardMaterial({
+            const bodyMaterial = new THREE.MeshStandardMaterial({
             color: 0xff0000,
             metalness: 0.6,
             roughness: 0.4
-        });
-        const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-        body.castShadow = true;
-        body.receiveShadow = true;
-        
+            });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.castShadow = true;
+            body.receiveShadow = true;
+            
         model.add(body);
         return model;
     }
@@ -185,17 +185,17 @@ export class WorldFPS {
         
         // Aerodynamic cabin
         const cabinGeometry = new THREE.BoxGeometry(5, 2, 6);
-        const cabinMaterial = new THREE.MeshStandardMaterial({
+            const cabinMaterial = new THREE.MeshStandardMaterial({
             color: 0x1a1a1a,
             metalness: 0.9,
             roughness: 0.1
-        });
-        const cabin = new THREE.Mesh(cabinGeometry, cabinMaterial);
+            });
+            const cabin = new THREE.Mesh(cabinGeometry, cabinMaterial);
         cabin.position.y = 1.75;
         cabin.position.z = -1;
         
-        // Dual cannons
-        const cannonGeometry = new THREE.CylinderGeometry(0.3, 0.3, 3);
+        // Dual cannons - doubled length from 3 to 6
+        const cannonGeometry = new THREE.CylinderGeometry(0.3, 0.3, 6);
         const cannonMaterial = new THREE.MeshStandardMaterial({
             color: 0x1a1a1a,
             metalness: 0.9,
@@ -378,13 +378,13 @@ export class WorldFPS {
                 const initialPosition = [121.0509, 14.5508];
                 
                 this.gameState.map = new mapboxgl.Map({
-                    container: 'map',
-                    style: 'mapbox://styles/mapbox/streets-v12',
+            container: 'map',
+            style: 'mapbox://styles/mapbox/streets-v12',
                     center: initialPosition,
                     zoom: 18.5,
                     pitch: 60,
-                    bearing: 0,
-                    antialias: true,
+            bearing: 0,
+            antialias: true,
                     renderWorldCopies: false
                 });
 
@@ -398,24 +398,24 @@ export class WorldFPS {
                     try {
                         // Add 3D terrain with reduced exaggeration
                         this.gameState.map.addSource('mapbox-dem', {
-                            'type': 'raster-dem',
-                            'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
-                            'tileSize': 512,
-                            'maxzoom': 14
-                        });
-                        
+                'type': 'raster-dem',
+                'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
+                'tileSize': 512,
+                'maxzoom': 14
+            });
+
                         // Reduce terrain exaggeration to 0.3 for flatter terrain
                         this.gameState.map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 0.3 });
                         
                         // Enhanced building layer with better colors
                         this.gameState.map.addLayer({
-                            'id': '3d-buildings',
+                'id': '3d-buildings',
                             'source': 'composite',
-                            'source-layer': 'building',
+                'source-layer': 'building',
                             'filter': ['==', 'extrude', 'true'],
-                            'type': 'fill-extrusion',
-                            'minzoom': 15,
-                            'paint': {
+                'type': 'fill-extrusion',
+                'minzoom': 15,
+                'paint': {
                                 'fill-extrusion-color': '#ecf0f1',
                                 'fill-extrusion-height': ['get', 'height'],
                                 'fill-extrusion-base': ['get', 'min_height'],
@@ -709,42 +709,63 @@ export class WorldFPS {
     }
 
     shoot() {
+        if (!this.gameState.vehicleModel) return;
+
         const now = Date.now();
-        const weapon = this.gameState.player.weapon;
-        
-        if (now > weapon.lastFired + weapon.cooldown) {
-            weapon.lastFired = now;
-            
-            // Create projectile based on weapon type
-            const projectile = this.models.projectiles[weapon.type].clone();
-            const angle = this.gameState.player.rotation * Math.PI / 180;
-            
-            // Position projectile at vehicle's weapon position (varies by vehicle)
-            const weaponOffset = {
-                'Dual Cannons': { y: 0.15, z: 0.35 },
-                'Heavy Mortar': { y: 0.4, z: 0.3 },
-                'Rocket Launcher': { y: 0.12, z: 0.3 },
-                'Flamethrower': { y: 0.2, z: 0.5 }
-            }[weapon.type];
-            
-            projectile.position.set(
-                this.gameState.player.model.position.x + Math.sin(angle) * weaponOffset.z,
-                this.gameState.player.model.position.y + weaponOffset.y,
-                this.gameState.player.model.position.z + Math.cos(angle) * weaponOffset.z
+        const cooldown = 250; // 250ms between shots
+
+        // Check if enough time has passed since last shot
+        if (this.lastShotTime && now - this.lastShotTime < cooldown) {
+            return;
+        }
+        this.lastShotTime = now;
+
+        // Create projectile for each cannon
+        const projectileSpeed = 2.0;
+        const projectileLifetime = 2000; // 2 seconds
+
+        // Get vehicle's rotation
+        const vehicleRotation = this.gameState.vehicleModel.rotation.y;
+
+        // Create projectiles from both cannons
+        [-1, 1].forEach(offset => {
+            // Create projectile
+            const projectile = new THREE.Mesh(
+                new THREE.SphereGeometry(0.1, 8, 8),
+                new THREE.MeshStandardMaterial({
+                    color: 0xff0000,
+                    emissive: 0xff0000,
+                    emissiveIntensity: 0.5
+                })
             );
-            
-            // Add velocity and lifetime to projectile
+
+            // Position projectile at cannon position
+            const cannonPos = this.gameState.vehicleModel.position.clone();
+            cannonPos.x += Math.cos(vehicleRotation) * offset;
+            cannonPos.y += 1;
+            cannonPos.z += Math.sin(vehicleRotation) * offset;
+            projectile.position.copy(cannonPos);
+
+            // Set projectile velocity - match vehicle's forward direction
             projectile.userData.velocity = {
-                x: Math.sin(angle) * weapon.projectileSpeed,
-                z: Math.cos(angle) * weapon.projectileSpeed
+                x: Math.sin(vehicleRotation) * projectileSpeed,
+                y: 0,
+                z: Math.cos(vehicleRotation) * projectileSpeed
             };
-            projectile.userData.lifetime = now + 2000; // 2 seconds
-            projectile.userData.damage = weapon.damage;
-            projectile.userData.range = weapon.range;
-            
+
+            // Set projectile lifetime
+            projectile.userData.lifetime = now + projectileLifetime;
+
+            // Add to scene and projectiles array
+            if (!this.gameState.projectiles) {
+                this.gameState.projectiles = [];
+            }
             this.gameState.projectiles.push(projectile);
             this.gameState.scene.add(projectile);
-        }
+        });
+
+        // Play shooting sound (if we add sound later)
+        // this.playShootSound();
     }
 
     updateCamera() {
@@ -790,10 +811,10 @@ export class WorldFPS {
         // Only handle turning if the vehicle is moving
         if (this.controls.forward || this.controls.backward) {
             // Handle turning - update rotation first
-            if (this.controls.left) {
+        if (this.controls.left) {
                 this.gameState.vehicleModel.rotation.y += turnSpeed;
-            }
-            if (this.controls.right) {
+        }
+        if (this.controls.right) {
                 this.gameState.vehicleModel.rotation.y -= turnSpeed;
             }
 
@@ -957,8 +978,7 @@ export class WorldFPS {
             'ArrowDown': 'backward',
             'ArrowLeft': 'left',
             'ArrowRight': 'right',
-            'ShiftLeft': 'boost',
-            'Space': 'shoot'
+            'ShiftLeft': 'boost'
         };
 
         // Keyboard down handler
@@ -981,21 +1001,16 @@ export class WorldFPS {
 
         // Mouse click handler for shooting
         document.addEventListener('mousedown', (e) => {
-            if (e.button === 0) { // Left click only
+            if (e.button === 0) { // Left click
                 e.preventDefault();
-                this.controls.shoot = true;
-            }
-        });
-
-        document.addEventListener('mouseup', (e) => {
-            if (e.button === 0) { // Left click only
-                e.preventDefault();
-                this.controls.shoot = false;
+                this.shoot();
             }
         });
     }
 
     updateProjectiles() {
+        if (!this.gameState.projectiles) return;
+
         const now = Date.now();
         
         // Update projectile positions and remove expired ones
@@ -1005,7 +1020,9 @@ export class WorldFPS {
                 return false;
             }
             
+            // Update position based on velocity
             projectile.position.x += projectile.userData.velocity.x;
+            projectile.position.y += projectile.userData.velocity.y;
             projectile.position.z += projectile.userData.velocity.z;
             
             return true;
@@ -1091,36 +1108,23 @@ export class WorldFPS {
                 console.log('Missing required game state components');
                 return;
             }
-
+            
             // Update game state
             const now = Date.now();
             const deltaTime = (now - (this.gameState.lastUpdate || now)) / 1000;
             this.gameState.lastUpdate = now;
-
-            // Debug log input states
-            if (this.controls) {
-                console.log('Controls state:', {
-                    forward: this.controls.forward,
-                    backward: this.controls.backward,
-                    left: this.controls.left,
-                    right: this.controls.right,
-                    boost: this.controls.boost
-                });
-            }
             
             // Update player position and rotation
             this.updatePlayerPosition();
+            
+            // Update projectiles
+            this.updateProjectiles();
             
             // Update camera
             this.updateCamera();
             
             // Ensure vehicle is visible
             this.gameState.vehicleModel.visible = true;
-
-            // Debug logging
-            console.log('Vehicle position:', this.gameState.vehicleModel.position);
-            console.log('Camera position:', this.gameState.camera.position);
-            console.log('Vehicle rotation:', this.gameState.vehicleModel.rotation.y);
 
             // Render scene
             if (this.gameState.renderer && this.gameState.scene && this.gameState.camera) {
