@@ -447,18 +447,18 @@ export class WorldFPS {
     createScorpionModel() {
         const model = new THREE.Group();
         
-        // Sleek bike body
-        const bodyGeometry = new THREE.BoxGeometry(3, 1, 8);
+        // Main bike body - more streamlined
+        const bodyGeometry = new THREE.BoxGeometry(1.2, 0.8, 6);
         const bodyMaterial = new THREE.MeshStandardMaterial({
-            color: 0x800080, // Purple
+            color: 0x800080,
             metalness: 0.9,
             roughness: 0.1
         });
         const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-        body.position.y = 1.0; // Raise body to accommodate wheels
+        body.position.y = 1.0;
         
-        // Front fairing
-        const fairingGeometry = new THREE.ConeGeometry(1.5, 3, 4);
+        // Front fairing - more aerodynamic
+        const fairingGeometry = new THREE.ConeGeometry(0.8, 2.5, 4);
         const fairingMaterial = new THREE.MeshStandardMaterial({
             color: 0x800080,
             metalness: 0.9,
@@ -466,21 +466,42 @@ export class WorldFPS {
         });
         const fairing = new THREE.Mesh(fairingGeometry, fairingMaterial);
         fairing.rotation.x = -Math.PI / 2;
-        fairing.position.set(0, 1, -3);
+        fairing.position.set(0, 1.2, -2.8);
+
+        // Fuel tank - more pronounced
+        const tankGeometry = new THREE.CylinderGeometry(0.4, 0.6, 1.2, 8);
+        const tankMaterial = new THREE.MeshStandardMaterial({
+            color: 0x800080,
+            metalness: 0.9,
+            roughness: 0.1
+        });
+        const tank = new THREE.Mesh(tankGeometry, tankMaterial);
+        tank.rotation.x = Math.PI / 2;
+        tank.position.set(0, 1.4, -0.5);
+
+        // Seat - more comfortable looking
+        const seatGeometry = new THREE.BoxGeometry(0.8, 0.2, 1.2);
+        const seatMaterial = new THREE.MeshStandardMaterial({
+            color: 0x111111,
+            metalness: 0.3,
+            roughness: 0.8
+        });
+        const seat = new THREE.Mesh(seatGeometry, seatMaterial);
+        seat.position.set(0, 1.2, 0.8);
 
         // Create wheel groups for steering
         const frontWheelGroup = new THREE.Group();
         const backWheelGroup = new THREE.Group();
         
         // Position the wheel groups relative to body
-        frontWheelGroup.position.set(0, 1.0, -3);
-        backWheelGroup.position.set(0, 1.0, 3);
+        frontWheelGroup.position.set(0, 1.0, -2.5);
+        backWheelGroup.position.set(0, 1.0, 2.0);
         
         model.add(frontWheelGroup);
         model.add(backWheelGroup);
         
-        // Add wheels - larger than Razorback's wheels
-        const wheelGeometry = new THREE.CylinderGeometry(1.2, 1.2, 0.5, 16);
+        // Add wheels - larger and more motorcycle-like
+        const wheelGeometry = new THREE.CylinderGeometry(1.0, 1.0, 0.4, 16);
         const wheelMaterial = new THREE.MeshStandardMaterial({
             color: 0x1a1a1a,
             metalness: 0.5,
@@ -497,30 +518,32 @@ export class WorldFPS {
         backWheel.rotation.z = Math.PI / 2;
         backWheelGroup.add(backWheel);
         
-        // Rocket launcher
+        // Rocket launcher - more integrated into the bike
         const launcherBase = new THREE.Mesh(
-            new THREE.BoxGeometry(0.8, 0.8, 2),
+            new THREE.BoxGeometry(0.6, 0.6, 1.5),
             new THREE.MeshStandardMaterial({ color: 0x333333 })
         );
-        launcherBase.position.set(0, 2, 0);
+        launcherBase.position.set(0, 1.8, 0);
         
         const launcherBarrel = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.3, 0.4, 3),
+            new THREE.CylinderGeometry(0.2, 0.3, 2.5),
             new THREE.MeshStandardMaterial({ color: 0x1a1a1a })
         );
-        launcherBarrel.position.set(0, 2.5, 0);
+        launcherBarrel.position.set(0, 2.0, 0);
         launcherBarrel.rotation.x = Math.PI / 2;
         
         // Add direction indicator (small arrow)
         const directionArrow = new THREE.Mesh(
-            new THREE.ConeGeometry(0.3, 1, 8),
+            new THREE.ConeGeometry(0.2, 0.8, 8),
             new THREE.MeshStandardMaterial({ color: 0xff0000 })
         );
         directionArrow.rotation.x = -Math.PI / 2;
-        directionArrow.position.set(0, 2, 4);
+        directionArrow.position.set(0, 2.0, 2.5);
         
         model.add(body);
         model.add(fairing);
+        model.add(tank);
+        model.add(seat);
         model.add(launcherBase);
         model.add(launcherBarrel);
         model.add(directionArrow);
@@ -1257,14 +1280,17 @@ export class WorldFPS {
             };
         }
 
-        // Get vehicle characteristics for Ironclad
+        // Get vehicle-specific characteristics from the selected vehicle
+        const vehicleType = this.gameState.selectedVehicle.type;
         const characteristics = {
-            maxSpeed: 0.4,
-            acceleration: 0.01,
-            deceleration: 0.008,
-            turnSpeed: 0.02,
-            boostMultiplier: 1.75, // Speed multiplier when boosting
-            boostAccelerationMultiplier: 1.5 // Acceleration multiplier when boosting
+            maxSpeed: this.gameState.selectedVehicle.maxSpeed,
+            acceleration: this.gameState.selectedVehicle.acceleration,
+            deceleration: this.gameState.selectedVehicle.deceleration,
+            turnSpeed: this.gameState.selectedVehicle.turnSpeed * 0.02, // Scale down turn speed for better control
+            boostMultiplier: vehicleType === 'Muscle Car' ? 2.0 : 1.75, // Razorback gets better boost
+            boostAccelerationMultiplier: vehicleType === 'Muscle Car' ? 1.75 : 1.5,
+            reverseSpeedMultiplier: 0.6,
+            wheelRotationSpeed: vehicleType === 'Muscle Car' ? 3 : 2 // Faster wheel rotation for Razorback
         };
 
         // Apply boost modifiers if boost is active
@@ -1285,7 +1311,7 @@ export class WorldFPS {
         } else if (this.controls.backward) {
             this.gameState.currentSpeed = Math.max(
                 (this.gameState.currentSpeed || 0) - currentAcceleration,
-                -currentMaxSpeed * 0.6
+                -characteristics.maxSpeed * characteristics.reverseSpeedMultiplier
             );
         } else {
             // Apply deceleration when no input
@@ -1299,23 +1325,31 @@ export class WorldFPS {
         // Update rotation based on input
         if (Math.abs(this.gameState.currentSpeed) > 0.01) {
             // Reduce turn speed when boosting for better control
+            const speedFactor = Math.abs(this.gameState.currentSpeed) / characteristics.maxSpeed;
             const currentTurnSpeed = this.controls.boost ? 
                 characteristics.turnSpeed * 0.7 : 
                 characteristics.turnSpeed;
 
+            // Apply turn speed based on vehicle type and speed
+            const turnMultiplier = vehicleType === 'Muscle Car' ? 
+                (1 + speedFactor * 0.5) : // Razorback turns better at higher speeds
+                (1 - speedFactor * 0.3);  // Other vehicles turn worse at higher speeds
+
             if (this.controls.left) {
-                model.rotation.y += currentTurnSpeed * (this.gameState.currentSpeed > 0 ? 1 : -1);
+                model.rotation.y += currentTurnSpeed * turnMultiplier * (this.gameState.currentSpeed > 0 ? 1 : -1);
                 // Rotate front wheels for steering
                 if (model.userData.wheelGroups) {
-                    model.userData.wheelGroups.frontLeft.rotation.y = Math.PI / 6;
-                    model.userData.wheelGroups.frontRight.rotation.y = Math.PI / 6;
+                    const steeringAngle = Math.PI / 6 * turnMultiplier;
+                    model.userData.wheelGroups.frontLeft.rotation.y = steeringAngle;
+                    model.userData.wheelGroups.frontRight.rotation.y = steeringAngle;
                 }
             } else if (this.controls.right) {
-                model.rotation.y -= currentTurnSpeed * (this.gameState.currentSpeed > 0 ? 1 : -1);
+                model.rotation.y -= currentTurnSpeed * turnMultiplier * (this.gameState.currentSpeed > 0 ? 1 : -1);
                 // Rotate front wheels for steering
                 if (model.userData.wheelGroups) {
-                    model.userData.wheelGroups.frontLeft.rotation.y = -Math.PI / 6;
-                    model.userData.wheelGroups.frontRight.rotation.y = -Math.PI / 6;
+                    const steeringAngle = -Math.PI / 6 * turnMultiplier;
+                    model.userData.wheelGroups.frontLeft.rotation.y = steeringAngle;
+                    model.userData.wheelGroups.frontRight.rotation.y = steeringAngle;
                 }
             } else {
                 // Reset front wheel rotation when not turning
@@ -1344,8 +1378,7 @@ export class WorldFPS {
 
             // Rotate wheels based on movement
             if (model.userData.wheels) {
-                const wheelRotationSpeed = 2;
-                const wheelRotation = wheelRotationSpeed * this.gameState.currentSpeed;
+                const wheelRotation = characteristics.wheelRotationSpeed * this.gameState.currentSpeed;
                 
                 // Rotate all wheels around their local X axis
                 model.userData.wheels.frontLeft.rotation.x += wheelRotation;
@@ -1374,6 +1407,7 @@ export class WorldFPS {
         // Debug logging with proper values
         if (this.gameState.debug) {
             console.log('Vehicle Movement:', {
+                vehicleType: vehicleType,
                 speed: this.gameState.currentSpeed,
                 maxSpeed: currentMaxSpeed,
                 boost: this.controls.boost,
@@ -1832,6 +1866,37 @@ export class WorldFPS {
         ground.rotation.x = -Math.PI / 2;
         ground.receiveShadow = true;
         this.gameState.scene.add(ground);
+    }
+
+    updateVehiclePhysics(delta) {
+        // ... existing code ...
+        if (this.currentVehicle.type === 'Sports Bike') {
+            // Enhanced lean angles for motorcycle
+            const maxLeanAngle = 45 * (Math.PI / 180); // 45 degrees max lean
+            const leanSpeed = 3.0; // How quickly the bike leans into turns
+            
+            // Calculate lean based on turn angle and speed
+            const targetLean = -this.currentTurnAngle * (this.currentSpeed / this.currentVehicle.maxSpeed);
+            const leanAngle = Math.max(-maxLeanAngle, Math.min(maxLeanAngle, targetLean));
+            
+            // Apply lean smoothly
+            this.vehicleModel.rotation.z = THREE.MathUtils.lerp(
+                this.vehicleModel.rotation.z,
+                leanAngle,
+                leanSpeed * delta
+            );
+            
+            // Enhanced turning at higher speeds
+            if (Math.abs(this.currentSpeed) > this.currentVehicle.maxSpeed * 0.5) {
+                this.currentTurnAngle *= 1.2; // 20% sharper turns at high speed
+            }
+            
+            // Quick direction changes
+            if (this.controls.left || this.controls.right) {
+                this.currentTurnAngle *= 1.15; // 15% more responsive steering
+            }
+        }
+        // ... existing code ...
     }
 }
 

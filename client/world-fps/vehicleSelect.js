@@ -119,10 +119,24 @@ export class VehicleSelect {
             gameContainer.style.display = 'block';
         }
 
-        // Call the callback with the selected vehicle data
+        // Create a properly initialized vehicle data object
+        const vehicleData = VEHICLES[this.selectedVehicle];
         const selectedVehicleData = {
-            ...VEHICLES[this.selectedVehicle],
-            id: this.selectedVehicle
+            id: this.selectedVehicle,
+            name: vehicleData.name,
+            type: vehicleData.type,
+            description: vehicleData.description,
+            health: vehicleData.health,
+            maxSpeed: vehicleData.maxSpeed,
+            acceleration: vehicleData.acceleration,
+            deceleration: vehicleData.deceleration,
+            turnSpeed: vehicleData.turnSpeed,
+            weaponType: vehicleData.weaponType,
+            damage: vehicleData.damage,
+            projectileSpeed: vehicleData.projectileSpeed,
+            range: vehicleData.range,
+            cooldown: vehicleData.cooldown,
+            damageStates: vehicleData.damageStates
         };
 
         console.log('Starting game with vehicle:', selectedVehicleData);

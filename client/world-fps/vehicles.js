@@ -46,15 +46,15 @@ export const VEHICLES = {
     SCORPION: {
         name: 'Scorpion',
         type: 'Sports Bike',
-        description: 'A nimble, high-risk/high-reward bike for daring players.',
+        description: 'A nimble, high-performance motorcycle built for extreme speed and agility.',
         health: 50,
-        maxSpeed: 0.61, // 220 km/h normalized
-        acceleration: 0.02,
-        deceleration: 0.01,
-        turnSpeed: 4,
+        maxSpeed: 0.83, // 300 km/h normalized
+        acceleration: 0.03,
+        deceleration: 0.015,
+        turnSpeed: 5,
         weaponType: 'Rocket Launcher',
         damage: 30,
-        projectileSpeed: 0.6,
+        projectileSpeed: 0.7,
         range: 60,
         cooldown: 3000, // 3 seconds between rockets
         damageStates: {
