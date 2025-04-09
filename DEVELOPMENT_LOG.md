@@ -72,6 +72,57 @@ Battle Horizon is a multiplayer vehicle combat game that combines 3D vehicle war
 - Improved shadow casting and receiving
 - Better terrain integration
 
+### Vehicle Movement and Model Improvements (2024-03-XX)
+
+#### Changes Made
+1. **Ironclad Model Scaling**
+   - Reduced overall model size by 50% for better proportions
+   - Adjusted all component dimensions while maintaining ratios
+   - Repositioned elements to match new scale
+
+2. **Wheel System Overhaul**
+   - Fixed wheel positions (front wheels at front, back wheels at back)
+   - Implemented realistic wheel rotation during movement
+   - Added steering animation for front wheels
+   - Created separate wheel groups for independent control
+   - Added proper wheel rotation directions (counter-rotating pairs)
+
+3. **Speed Boost Functionality**
+   - Implemented boost mechanic using Shift key
+   - Added 75% speed increase during boost
+   - Increased acceleration by 50% while boosting
+   - Reduced turn speed by 30% during boost for better control
+   - Added boost state to debug logging
+
+4. **Movement System Improvements**
+   - Enhanced vehicle physics calculations
+   - Added proper deceleration when no input
+   - Improved turning response
+   - Fixed position and rotation tracking
+   - Enhanced debug logging with detailed movement data
+
+#### Technical Details
+- Boost characteristics:
+  ```javascript
+  boostMultiplier: 1.75        // Speed multiplier when boosting
+  boostAccelerationMultiplier: 1.5  // Acceleration multiplier when boosting
+  ```
+- Vehicle base characteristics:
+  ```javascript
+  maxSpeed: 0.4
+  acceleration: 0.01
+  deceleration: 0.008
+  turnSpeed: 0.02
+  ```
+- Wheel rotation speed is proportional to vehicle speed
+- Front wheels turn up to 30 degrees (π/6 radians) during steering
+
+#### Next Steps
+- Fine-tune boost mechanics based on gameplay testing
+- Add visual effects for boost activation
+- Consider adding boost cooldown or energy system
+- Implement vehicle-specific boost characteristics
+
 ## Planned Features
 - Multiplayer integration using Colyseus
 - Weapon system implementation
