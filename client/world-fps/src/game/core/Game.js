@@ -2,8 +2,9 @@
 const MAPBOX_TOKEN = 'pk.eyJ1IjoicmFoa2luIiwiYSI6ImNtOTVxYXV2MzFkZDIyanBzZ2d1amc4N24ifQ.BQTvS3wC8JnfsHGYLo0_tw';
 mapboxgl.accessToken = MAPBOX_TOKEN;
 
-import { VEHICLES } from './vehicles.js';
-import { VehicleSelect } from './vehicleSelect.js';
+// Import vehicle data and selection UI
+import { VEHICLES } from '../vehicles/vehicles.js';
+import { VehicleSelect } from '../ui/VehicleSelect.js';
 
 export class WorldFPS {
     constructor() {
@@ -570,7 +571,7 @@ export class WorldFPS {
         // Rusty van body - halved dimensions
         const bodyGeometry = new THREE.BoxGeometry(3.5, 2, 6);
         const bodyMaterial = new THREE.MeshStandardMaterial({
-            color: 0x8B4513,
+                color: 0x8B4513,
             metalness: 0.3,
             roughness: 0.9
         });
@@ -1204,8 +1205,8 @@ export class WorldFPS {
                 if (!this.gameState.projectiles) {
                     this.gameState.projectiles = [];
                 }
-                
-                this.gameState.projectiles.push(projectile);
+            
+            this.gameState.projectiles.push(projectile);
                 this.gameState.scene.add(projectile);
 
                 // Create muzzle flash at cannon position
@@ -1476,7 +1477,7 @@ export class WorldFPS {
             // Invert turning when going backwards
             const turnDirection = this.gameState.currentSpeed >= 0 ? 1 : -1;
 
-            if (this.controls.left) {
+        if (this.controls.left) {
                 model.rotation.y += currentTurnSpeed * turnDirection;
                 if (model.userData.wheelGroups) {
                     const steeringAngle = Math.PI / 6;

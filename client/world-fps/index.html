@@ -29,7 +29,7 @@
     <script src="https://unpkg.com/colyseus.js@0.15.9/dist/colyseus.js"></script>
     
     <!-- Styles -->
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles/styles.css">
     <style>
         body {
             margin: 0;
@@ -187,13 +187,6 @@
     </style>
 </head>
 <body>
-    <!-- Vehicle Selection Screen -->
-    <div id="vehicle-select">
-        <h2>Select Your Vehicle</h2>
-        <div class="vehicle-grid"></div>
-        <button id="start-game" disabled>Start Game</button>
-    </div>
-
     <!-- Loading Screen -->
     <div id="loading-screen" style="display: none;">
         <h2>Loading Battle Horizon...</h2>
@@ -221,7 +214,7 @@
     <!-- Game Scripts -->
     <script type="module">
         // Initialize game after all modules are loaded
-        import { WorldFPS } from './game.js';
+        import { WorldFPS } from './src/game/core/Game.js';
 
         // Wait for DOM content to load
         window.addEventListener('DOMContentLoaded', () => {

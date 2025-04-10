@@ -1,116 +1,149 @@
-# Battle Horizon - Development Roadmap
+# Battle Horizon
 
-Battle Horizon is a 3rd-person, real-world, online car combat game. This README serves as a development checklist to track completed and pending features. It will later be replaced with a "How to Play" guide upon completion.
+A multiplayer vehicle combat game set in a real-world map environment.
 
----
+## Project Structure
 
-## 🚀 Getting Started
+```
+battleHorizon/
+├── client/
+│   └── world-fps/
+│       ├── src/
+│       │   └── game/
+│       │       ├── core/
+│       │       │   └── Game.js         # Main game logic
+│       │       ├── vehicles/
+│       │       │   └── vehicles.js     # Vehicle definitions and stats
+│       │       ├── ui/
+│       │       │   └── VehicleSelect.js # Vehicle selection screen
+│       │       └── utils/
+│       │           └── helpers.js      # Utility functions
+│       ├── assets/
+│       │   ├── models/                 # 3D models
+│       │   └── textures/               # Textures and materials
+│       ├── styles/
+│       │   └── styles.css             # Global styles
+│       └── index.html                 # Main entry point
+├── server/
+│   ├── src/
+│   │   ├── rooms/                    # Multiplayer room logic
+│   │   └── index.ts                  # Server entry point
+│   └── package.json
+└── package.json
+
+```
+
+## Getting Started
 
 ### Prerequisites
+
 - Node.js (v14 or higher)
 - npm (v6 or higher)
 
 ### Installation
+
 1. Clone the repository:
 ```bash
 git clone https://github.com/yourusername/battleHorizon.git
 cd battleHorizon
 ```
 
-2. Install dependencies:
+2. Install dependencies for both client and server:
 ```bash
 # Install root dependencies
 npm install
 
-# Install client dependencies
-cd client
-npm install
-
 # Install server dependencies
-cd ../server
+cd server
 npm install
 ```
 
 ### Running the Game
-1. Start the development server:
+
+1. Start the game server (handles multiplayer):
 ```bash
-# From the root directory
-npm start
+cd server
+npm run dev
 ```
+The server will start on `ws://localhost:2567`
 
-2. In a new terminal, start the client:
+2. In a new terminal, start the client server:
 ```bash
-cd client
-npm start
+cd client/world-fps
+npx http-server -p 8080
 ```
+The client will be available at `http://localhost:8080`
 
-3. Open your browser and navigate to:
-```
-http://localhost:8080
-```
+3. Open your browser and navigate to `http://localhost:8080`
 
-Note: The game client runs in development mode by default. For production deployment, use `npm run build` to create an optimized build.
+## Gameplay
 
----
+1. Select your vehicle from four unique options:
+   - **Razorback**: Fast muscle car with dual cannons
+   - **Ironclad**: Heavy armored truck with mortar
+   - **Scorpion**: Agile motorcycle with rocket launcher
+   - **Junkyard King**: Modified van with flamethrower
 
-## ✅ Phase 1: Core Vehicle Mechanics
+2. Controls:
+   - WASD or Arrow Keys: Movement
+   - Mouse: Aim
+   - Left Click: Shoot
+   - Space: Drift (when above 50% max speed)
+   - Shift: Boost (when available)
 
-- [ ] Project structure setup
-- [ ] Vehicle model import (Razorback)
-- [ ] Basic textures applied
-- [ ] Movement system (acceleration, turning, suspension)
+## Development Stack
+
+- Three.js for 3D rendering
+- Mapbox for real-world environment
+- Colyseus for multiplayer functionality
+
+## Development Phases
+
+### Phase 1: Core Vehicle Mechanics
+- [x] Project structure setup
+- [x] Vehicle model import (Razorback)
+- [x] Basic textures applied
+- [x] Movement system (acceleration, turning, suspension)
 - [ ] Physics setup (gravity, friction, collisions)
 - [ ] Vehicle damage states and explosion
-- [ ] Weapon system (Dual Cannons, projectile firing)
+- [x] Weapon system (Dual Cannons, projectile firing)
 - [ ] Power-up system (Health, Speed, Overcharge)
 - [ ] Resupply system (ammo refill with cooldown)
 - [ ] Day/Night system (24-hour cycle, lighting, headlights)
 - [ ] Weather system (Clear, Rain, Fog, Storm)
 
----
-
-## 🗺️ Phase 2: Map Integration
-
-- [ ] Manila rendered with 3D terrain and buildings
-- [ ] Camera synced to vehicle position
-- [ ] Teleport system (text input and location jump)
+### Phase 2: Map Integration
+- [x] Manila rendered with 3D terrain and buildings
+- [x] Camera synced to vehicle position
+- [x] Teleport system (text input and location jump)
 - [ ] Minimap with player, power-ups, resupply points
 - [ ] Power-up placement on roads (spatial logic)
 - [ ] Resupply point placement via real POIs
 - [ ] Lighting sync with local time (Mapbox)
 - [ ] Real-world weather visual overlays
 
----
-
-## 🌐 Phase 3: Multiplayer Functionality
-
-- [ ] Server setup with real-time sync
-- [ ] Vehicle movement synchronization
-- [ ] Cannon fire and health sync
+### Phase 3: Multiplayer Functionality
+- [x] Server setup with real-time sync
+- [x] Vehicle movement synchronization
+- [x] Weapon fire and health sync
 - [ ] Lobby system with disconnect handling
 - [ ] Power-up sync (spawn, pickup, effects)
 - [ ] Resupply sync (usage and cooldown)
 - [ ] Synchronized day/night across all players
 - [ ] Synchronized weather and effects
 
----
-
-## 🎨 Phase 4: UI & Polish
-
+### Phase 4: UI & Polish
 - [ ] Minimap enhancements (zoom, drag, markers)
-- [ ] Teleport UI with autocomplete
-- [ ] Weapon cooldown bar (color-coded)
+- [x] Teleport UI with autocomplete
+- [x] Weapon cooldown bar (color-coded)
 - [ ] Power-up popup and timers
 - [ ] Resupply ammo bar and proximity alert
 - [ ] Day/Night clock, headlight toggle
 - [ ] Weather icon and visibility bar
 - [ ] Visual effects (explosions, sparks, weather)
-- [ ] Add vehicles: Ironclad, Scorpion, Junkyard King
+- [x] Add vehicles: Ironclad, Scorpion, Junkyard King
 
----
-
-## 🚀 Phase 5: Expansion & Optimization
-
+### Phase 5: Expansion & Optimization
 - [ ] Add new vehicles: Tank, Drone
 - [ ] New power-ups: Shield Boost, Trap Drop
 - [ ] Expand resupply types and POIs
@@ -123,28 +156,14 @@ Note: The game client runs in development mode by default. For production deploy
 - [ ] 8-player stress test with all systems active
 - [ ] Final balancing and iteration from playtests
 
----
+## Contributing
 
-## Project Structure
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-```
-battleHorizon/
-├── assets/           # Game assets (models, textures, sounds)
-├── client/          # Client-side game code
-│   ├── world-fps/   # Main game client
-│   ├── client.js    # Client networking code
-│   └── index.html   # Client entry point
-├── dev-client/      # Development client code
-├── server/          # Server-side game logic
-│   ├── src/         # Server source code
-│   └── tsconfig.json # TypeScript configuration
-├── src/             # Core engine code
-│   ├── index.html   # Engine entry point
-│   └── webpack.config.js # Build configuration
-├── scripts/         # Build and deployment scripts
-├── index.html       # Main entry point
-├── package.json     # Project configuration
-└── README.md        # This file
-```
+## License
 
-Stay tuned. Once development is complete, this README will be updated with a detailed guide on how to play Battle Horizon!
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
