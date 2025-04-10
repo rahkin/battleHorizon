@@ -189,247 +189,236 @@ export class VehicleSelect {
                 color: white;
                 z-index: 1000;
                 overflow-y: auto;
-                padding: 1rem;
+                padding: 3rem;
                 box-sizing: border-box;
             }
 
             h1 {
-                margin: 0 0 1rem 0;
+                margin: 0 0 3rem 0;
                 color: white;
                 text-align: center;
-                font-size: 1.8rem;
+                font-size: 2.2rem;
+                font-weight: bold;
                 text-transform: uppercase;
-                letter-spacing: 2px;
+                letter-spacing: 3px;
             }
 
             .vehicle-grid {
                 display: grid;
-                grid-template-columns: repeat(2, minmax(220px, 380px));
-                gap: 2rem 3rem;
+                grid-template-columns: repeat(2, minmax(320px, 420px));
+                gap: 4rem;
+                max-width: 950px;
                 width: 100%;
-                max-width: 850px;
-                margin: 0 auto 1rem auto;
+                margin: 0 auto;
+                padding-bottom: 3rem;
             }
 
             .vehicle-card {
-                background: rgba(40, 40, 40, 0.95);
-                border: 1px solid rgba(76, 175, 80, 0.2);
-                border-radius: 6px;
-                padding: 1rem;
+                background: rgba(30, 30, 30, 0.9);
+                border: 2px solid rgba(255, 255, 255, 0.1);
+                border-radius: 16px;
+                padding: 2rem;
+                min-height: 300px;
                 display: flex;
                 flex-direction: column;
-                gap: 0.6rem;
+                justify-content: space-between;
                 transition: all 0.3s ease;
-                height: 100%;
-                min-height: 260px;
                 cursor: pointer;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .vehicle-card:hover {
+                transform: translateY(-5px);
+                border-color: rgba(255, 255, 255, 0.3);
+                box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+            }
+
+            .vehicle-card.selected {
+                border-color: #4CAF50;
+                box-shadow: 0 0 32px rgba(76, 175, 80, 0.3);
             }
 
             .card-content {
                 flex: 1;
                 display: flex;
                 flex-direction: column;
-                gap: 0.6rem;
+                gap: 1.2rem;
             }
 
-            .vehicle-card.selected {
-                border: 2px solid #4CAF50;
-                background: rgba(76, 175, 80, 0.1);
-                transform: translateY(-2px);
-                box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
-            }
-
-            .vehicle-card:hover {
-                transform: translateY(-1px);
-                box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1);
-            }
-
-            h2 {
+            .vehicle-card h2 {
                 margin: 0;
+                font-size: 1.8rem;
                 color: #4CAF50;
-                font-size: 1.2rem;
-                text-transform: uppercase;
-                letter-spacing: 1px;
             }
 
             .vehicle-type {
+                font-size: 1rem;
                 color: #888;
-                font-style: italic;
-                font-size: 0.75rem;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-                margin-top: -0.4rem;
+                margin-bottom: 0.5rem;
             }
 
             .vehicle-description {
+                font-size: 1.1rem;
+                line-height: 1.5;
                 color: #ccc;
-                font-size: 0.8rem;
-                line-height: 1.3;
-                margin: 0.2rem 0;
-                flex: 1;
-                max-height: 2.6em;
-                overflow: hidden;
+                margin-bottom: 1.5rem;
                 display: -webkit-box;
                 -webkit-line-clamp: 2;
                 -webkit-box-orient: vertical;
+                overflow: hidden;
             }
 
             .vehicle-stats {
-                background: rgba(0, 0, 0, 0.3);
-                padding: 0.8rem;
-                border-radius: 4px;
                 display: flex;
                 flex-direction: column;
-                gap: 0.6rem;
-                margin-top: auto;
+                gap: 1rem;
+                margin-top: 1rem;
             }
 
             .stat {
                 display: grid;
-                grid-template-columns: 50px 1fr 40px;
+                grid-template-columns: 70px 1fr 50px;
                 align-items: center;
-                gap: 0.6rem;
-            }
-
-            .stat span {
-                color: #aaa;
-                font-size: 0.8rem;
-            }
-
-            .stat-value {
-                color: #4CAF50 !important;
-                text-align: right;
-                font-weight: bold;
-                font-size: 0.8rem;
+                gap: 1rem;
             }
 
             .stat-bar {
-                height: 4px;
+                height: 6px;
                 background: rgba(255, 255, 255, 0.1);
-                border-radius: 2px;
+                border-radius: 3px;
                 overflow: hidden;
             }
 
             .stat-fill {
                 height: 100%;
                 background: #4CAF50;
-                border-radius: 2px;
+                border-radius: 3px;
                 transition: width 0.3s ease;
+            }
+
+            .stat-value {
+                font-size: 1rem;
+                color: #888;
+                text-align: right;
             }
 
             .weapon-stat {
                 display: flex;
-                justify-content: space-between;
                 align-items: center;
+                gap: 1rem;
+                padding-top: 1rem;
+                margin-top: 0.5rem;
                 border-top: 1px solid rgba(255, 255, 255, 0.1);
-                padding-top: 0.6rem;
-                margin-top: 0.2rem;
-            }
-
-            .weapon-stat span {
-                color: #aaa;
-                font-size: 0.8rem;
             }
 
             .weapon-info {
-                color: #ff9800;
-                font-weight: bold;
-                font-size: 0.85rem;
+                font-size: 1.1rem;
+                color: #4CAF50;
             }
 
             .select-btn {
-                background: #4CAF50;
-                color: white;
-                border: none;
-                padding: 0.6rem;
-                border-radius: 3px;
+                background: transparent;
+                border: 2px solid #4CAF50;
+                color: #4CAF50;
+                padding: 1.2rem;
+                border-radius: 8px;
                 cursor: pointer;
-                font-size: 0.85rem;
-                font-weight: bold;
+                font-size: 1.1rem;
+                margin-top: 2rem;
+                transition: all 0.3s ease;
                 text-transform: uppercase;
-                letter-spacing: 1px;
-                transition: all 0.2s;
+                letter-spacing: 2px;
                 width: 100%;
-                margin-top: 0.4rem;
             }
 
             .select-btn:hover {
-                background: #45a049;
+                background: #4CAF50;
+                color: white;
             }
 
             .select-btn.selected {
-                background: #388E3C;
-                box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+                background: #4CAF50;
+                color: white;
             }
 
             .start-button-container {
+                margin-top: 3rem;
+                margin-bottom: 3rem;
                 width: 100%;
-                max-width: 850px;
+                max-width: 950px;
                 display: flex;
                 justify-content: center;
-                margin: 1rem 0;
             }
 
             .start-game-btn {
-                background: #2196F3;
+                background: #4CAF50;
                 color: white;
                 border: none;
-                padding: 0.8rem 2.5rem;
-                border-radius: 3px;
+                padding: 1.5rem 4rem;
+                border-radius: 12px;
+                font-size: 1.4rem;
                 cursor: pointer;
-                font-size: 1rem;
-                font-weight: bold;
-                text-transform: uppercase;
-                letter-spacing: 2px;
                 transition: all 0.3s ease;
+                text-transform: uppercase;
+                letter-spacing: 3px;
+                min-width: 320px;
             }
 
             .start-game-btn:disabled {
                 background: #666;
                 cursor: not-allowed;
-                opacity: 0.7;
-                transform: none;
-                box-shadow: none;
-            }
-
-            .start-game-btn:not(:disabled) {
-                animation: pulse 2s infinite;
+                opacity: 0.5;
             }
 
             .start-game-btn:not(:disabled):hover {
-                background: #1976D2;
-                transform: scale(1.05);
-                box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
-                animation: none;
+                background: #45a049;
+                transform: translateY(-3px);
+                box-shadow: 0 8px 24px rgba(76, 175, 80, 0.4);
             }
 
-            @keyframes pulse {
-                0% {
-                    transform: scale(1);
-                    box-shadow: 0 0 0 0 rgba(33, 150, 243, 0.4);
+            @media (max-width: 1024px) {
+                .vehicle-grid {
+                    grid-template-columns: repeat(2, minmax(280px, 380px));
+                    gap: 3rem;
+                    padding: 0 1.5rem;
                 }
-                70% {
-                    transform: scale(1.02);
-                    box-shadow: 0 0 0 10px rgba(33, 150, 243, 0);
-                }
-                100% {
-                    transform: scale(1);
-                    box-shadow: 0 0 0 0 rgba(33, 150, 243, 0);
+
+                .vehicle-card {
+                    min-height: 280px;
+                    padding: 1.5rem;
                 }
             }
 
             @media (max-width: 768px) {
+                .vehicle-select {
+                    padding: 2rem;
+                }
+
                 .vehicle-grid {
                     grid-template-columns: 1fr;
-                    gap: 1rem;
+                    gap: 2.5rem;
+                    padding: 0 1rem;
                 }
-                
-                .vehicle-card {
-                    min-height: 240px;
-                }
-                
+
                 h1 {
-                    font-size: 1.5rem;
+                    font-size: 1.8rem;
+                    margin-bottom: 2rem;
+                }
+
+                .vehicle-card {
+                    min-height: 260px;
+                    padding: 1.5rem;
+                }
+
+                .vehicle-card h2 {
+                    font-size: 1.6rem;
+                }
+
+                .start-game-btn {
+                    padding: 1.2rem 3rem;
+                    font-size: 1.2rem;
+                    min-width: 280px;
                 }
             }
         `;
