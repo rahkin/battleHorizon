@@ -5,25 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Battle Horizon</title>
     
+    <!-- Import map for ES modules -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.162.0/build/three.module.js",
+            "cannon-es": "https://unpkg.com/cannon-es@0.20.0/dist/cannon-es.js"
+        }
+    }
+    </script>
+    
     <!-- External Dependencies -->
     <script src='https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.js'></script>
     <link href='https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.css' rel='stylesheet' />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     
     <!-- Buffer and Process Polyfills -->
     <script>
         window.global = window;
-        var THREE = window.THREE;
         window.process = {
             env: { DEBUG: undefined },
             version: [],
             browser: true
         };
     </script>
-    <script type="module">
-        import { Buffer } from 'https://cdn.jsdelivr.net/npm/buffer@6.0.3/+esm';
-        window.Buffer = Buffer;
-    </script>
+    
+    <!-- Main Game Script -->
+    <script type="module" src="src/game/core/Game.js"></script>
     
     <!-- Colyseus Client -->
     <script src="https://unpkg.com/colyseus.js@0.15.9/dist/colyseus.js"></script>
@@ -217,13 +224,16 @@
         import { WorldFPS } from './src/game/core/Game.js';
 
         // Wait for DOM content to load
-        window.addEventListener('DOMContentLoaded', () => {
-            try {
-                // Create game instance
-                window.game = new WorldFPS();
-            } catch (error) {
-                console.error('Error initializing game:', error);
-            }
+        document.addEventListener('DOMContentLoaded', () => {
+            // Make sure all resources are loaded
+            window.addEventListener('load', () => {
+                try {
+                    // Create game instance
+                    window.game = new WorldFPS();
+                } catch (error) {
+                    console.error('Error initializing game:', error);
+                }
+            });
         });
     </script>
 </body>

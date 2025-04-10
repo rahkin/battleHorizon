@@ -19,5 +19,8 @@
     "license": "MIT",
     "devDependencies": {
         "http-server": "^14.1.1"
+    },
+    "dependencies": {
+        "cannon-es": "^0.20.0"
     }
-} 
+}

@@ -1,3 +1,7 @@
+// Import Three.js and specific components
+import * as THREE from 'three';
+import { BoxGeometry, MeshStandardMaterial, Mesh, Group, Vector3, Quaternion, Euler } from 'three';
+
 // Initialize Mapbox with your access token
 const MAPBOX_TOKEN = 'pk.eyJ1IjoicmFoa2luIiwiYSI6ImNtOTVxYXV2MzFkZDIyanBzZ2d1amc4N24ifQ.BQTvS3wC8JnfsHGYLo0_tw';
 mapboxgl.accessToken = MAPBOX_TOKEN;
@@ -5,6 +9,8 @@ mapboxgl.accessToken = MAPBOX_TOKEN;
 // Import vehicle data and selection UI
 import { VEHICLES } from '../vehicles/vehicles.js';
 import { VehicleSelect } from '../ui/VehicleSelect.js';
+
+import { CannonPhysics } from './CannonPhysics.js';
 
 export class WorldFPS {
     constructor() {
@@ -34,6 +40,16 @@ export class WorldFPS {
         // Initialize logging
         this.setupLogging();
         this.showVehicleSelection();
+        
+        // Initialize physics
+        this.physics = new CannonPhysics();
+        
+        // Add debug key listener
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'p') {
+                this.physics.toggleDebug(this.gameState.scene);
+            }
+        });
     }
 
     setupLogging() {
@@ -1909,10 +1925,12 @@ export class WorldFPS {
             // Ensure vehicle is visible
             this.gameState.vehicleModel.visible = true;
 
-            // Render scene
-            if (this.gameState.renderer && this.gameState.scene && this.gameState.camera) {
-                this.gameState.renderer.render(this.gameState.scene, this.gameState.camera);
-            }
+            // Update physics before rendering
+            this.physics.update(deltaTime);
+            this.physics.updateDebug();
+            
+            // Continue with regular rendering
+            this.gameState.renderer.render(this.gameState.scene, this.gameState.camera);
         };
         
         animate();
