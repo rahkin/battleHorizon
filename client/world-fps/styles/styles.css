@@ -111,14 +111,13 @@ body {
 
 .vehicle-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-    width: 100%;
-    max-width: 1200px;
+    grid-template-columns: repeat(2, minmax(220px, 380px));
+    row-gap: 4rem;
+    column-gap: 2.5rem;
+    justify-content: center;
+    padding: 2rem;
+    max-width: 850px;
     margin: 0 auto;
-    overflow-y: auto;
-    max-height: calc(100vh - 250px);
-    padding: 1rem;
 }
 
 #start-game {
@@ -155,99 +154,156 @@ body {
 }
 
 .vehicle-card {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    padding: 1.5rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    border: 2px solid transparent;
-    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 1.2rem;
+    min-height: 260px;
     display: flex;
     flex-direction: column;
+    gap: 0.8rem;
+    transition: all 0.3s ease;
+    margin-bottom: 0;
 }
 
 .vehicle-card:hover {
-    background: rgba(255, 255, 255, 0.15);
     transform: translateY(-5px);
+    border-color: rgba(255, 255, 255, 0.3);
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
 
 .vehicle-card.selected {
     border-color: #4CAF50;
-    background: rgba(76, 175, 80, 0.2);
     box-shadow: 0 0 20px rgba(76, 175, 80, 0.3);
 }
 
 .vehicle-card h3 {
-    margin: 0 0 1rem;
+    margin: 0;
     font-size: 1.5rem;
-    color: #4CAF50;
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
-.vehicle-type {
-    font-size: 1.1rem;
-    color: #888;
-    margin: 0.5rem 0;
-}
-
-.vehicle-description {
+.vehicle-card p {
+    margin: 0;
     color: #ccc;
-    margin: 1rem 0;
+    font-size: 0.9rem;
     line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .vehicle-stats {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 1rem;
-    margin: 1rem 0;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem;
+    margin-top: 0.6rem;
 }
 
-.stat {
-    background: rgba(0, 0, 0, 0.3);
-    padding: 0.5rem;
-    border-radius: 5px;
-    text-align: center;
+.stat-bar {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
 }
 
-.damage-states {
-    margin-top: auto;
-    background: rgba(0, 0, 0, 0.2);
-    padding: 1rem;
-    border-radius: 8px;
+.stat-bar-fill {
+    height: 100%;
+    background: #4CAF50;
+    transition: width 0.3s ease;
 }
 
-.damage-state-title {
-    margin: 0 0 0.5rem;
-    color: #ddd;
-    font-size: 1rem;
+.weapon-info {
+    margin-top: 0.8rem;
+    padding-top: 0.8rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.damage-state-item {
-    padding: 0.5rem;
-    margin: 0.25rem 0;
+.weapon-info p {
+    font-size: 0.8rem;
+    color: #aaa;
+}
+
+.select-button {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 0.6rem 1rem;
     border-radius: 4px;
+    cursor: pointer;
     font-size: 0.9rem;
+    transition: all 0.3s ease;
+    margin-top: auto;
 }
 
-.damage-state-item.pristine {
-    background: rgba(76, 175, 80, 0.2);
-    color: #4CAF50;
+.select-button:hover {
+    background: #45a049;
+    transform: translateY(-2px);
 }
 
-.damage-state-item.scratched {
-    background: rgba(255, 193, 7, 0.2);
-    color: #FFC107;
+.select-button:active {
+    transform: translateY(0);
 }
 
-.damage-state-item.wrecked {
-    background: rgba(255, 87, 34, 0.2);
-    color: #FF5722;
+/* Vehicle grid layout */
+.vehicle-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(220px, 380px));
+    row-gap: 4rem;
+    column-gap: 2.5rem;
+    justify-content: center;
+    padding: 2rem;
+    max-width: 850px;
+    margin: 0 auto;
 }
 
-.damage-state-item.critical {
-    background: rgba(244, 67, 54, 0.2);
-    color: #F44336;
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .vehicle-grid {
+        grid-template-columns: 1fr;
+        padding: 1rem;
+        row-gap: 3rem;
+    }
+
+    .vehicle-card {
+        min-height: 240px;
+        padding: 1rem;
+    }
+
+    .vehicle-card h3 {
+        font-size: 1.3rem;
+    }
+}
+
+/* Vehicle selection container */
+#vehicle-select {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem;
+    background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.9));
+}
+
+/* Title styling */
+.vehicle-select-title {
+    color: white;
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+    text-align: center;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Description styling */
+.vehicle-select-description {
+    color: #ccc;
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto 2rem;
+    line-height: 1.6;
 }
 
 /* Scrollbar styles */
