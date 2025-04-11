@@ -1582,22 +1582,21 @@ export class WorldFPS {
     getVehicleCharacteristics(vehicle) {
         // Base characteristics that all vehicles share
         const baseCharacteristics = {
-            maxSpeed: 0.5,
-            acceleration: 0.015,
-            deceleration: 0.02,
+            maxSpeed: 0.25, // Scaled down from 0.5
+            acceleration: 0.0075, // Scaled down from 0.015
+            deceleration: 0.01, // Scaled down from 0.02
             turnSpeed: 0.03,
-            suspensionTravel: 0.1,
+            suspensionTravel: 0.05, // Scaled down from 0.1
             suspensionStiffness: 0.1,
             bodyRoll: 0.15,
             rollingResistance: 0.01,
             forwardBias: 1.0,
             reverseBias: 0.7,
             reverseSpeedMultiplier: 0.6,
-            driftFactor: 0.85,        // How much grip is lost during drift
-            driftRecovery: 0.02,      // How quickly grip recovers after drift
-            lateralFriction: 1.0,     // Current grip level (modified during drift)
+            driftFactor: 0.85,
+            driftRecovery: 0.02,
+            lateralFriction: 1.0,
             turnSpeedCurve: (speedFactor) => {
-                // Default turn speed curve - reduces turn rate at high speeds
                 return 0.5 + (1 - speedFactor) * 0.5;
             }
         };
@@ -1607,16 +1606,15 @@ export class WorldFPS {
             case 'RAZORBACK':
                 return {
                     ...baseCharacteristics,
-                    maxSpeed: 0.8,
-                    acceleration: 0.02,
-                    deceleration: 0.015,
+                    maxSpeed: 0.4, // Scaled down from 0.8
+                    acceleration: 0.01, // Scaled down from 0.02
+                    deceleration: 0.0075, // Scaled down from 0.015
                     turnSpeed: 0.04,
                     bodyRoll: 0.2,
                     suspensionStiffness: 0.15,
-                    driftFactor: 0.7,        // Better drift control
-                    driftRecovery: 0.015,    // Slower grip recovery for longer drifts
+                    driftFactor: 0.7,
+                    driftRecovery: 0.015,
                     turnSpeedCurve: (speedFactor) => {
-                        // Razorback maintains better turning at high speeds
                         return 0.7 + (1 - speedFactor) * 0.3;
                     }
                 };
@@ -1624,15 +1622,14 @@ export class WorldFPS {
             case 'IRONCLAD':
                 return {
                     ...baseCharacteristics,
-                    maxSpeed: 0.4,
-                    acceleration: 0.01,
-                    deceleration: 0.008,
+                    maxSpeed: 0.2, // Scaled down from 0.4
+                    acceleration: 0.005, // Scaled down from 0.01
+                    deceleration: 0.004, // Scaled down from 0.008
                     turnSpeed: 0.02,
                     bodyRoll: 0.1,
                     suspensionStiffness: 0.2,
                     rollingResistance: 0.02,
                     turnSpeedCurve: (speedFactor) => {
-                        // Ironclad has consistent but slow turning
                         return 0.8;
                     }
                 };
@@ -1640,14 +1637,13 @@ export class WorldFPS {
             case 'SCORPION':
                 return {
                     ...baseCharacteristics,
-                    maxSpeed: 1.0,
-                    acceleration: 0.025,
-                    deceleration: 0.02,
+                    maxSpeed: 0.5, // Scaled down from 1.0
+                    acceleration: 0.0125, // Scaled down from 0.025
+                    deceleration: 0.01, // Scaled down from 0.02
                     turnSpeed: 0.05,
                     bodyRoll: 0.25,
                     suspensionStiffness: 0.08,
                     turnSpeedCurve: (speedFactor) => {
-                        // Scorpion has aggressive turning at low speeds
                         return 1.0 - (speedFactor * 0.6);
                     }
                 };
@@ -1655,14 +1651,13 @@ export class WorldFPS {
             case 'JUNKYARD_KING':
                 return {
                     ...baseCharacteristics,
-                    maxSpeed: 0.6,
-                    acceleration: 0.012,
-                    deceleration: 0.015,
+                    maxSpeed: 0.3, // Scaled down from 0.6
+                    acceleration: 0.006, // Scaled down from 0.012
+                    deceleration: 0.0075, // Scaled down from 0.015
                     turnSpeed: 0.025,
                     bodyRoll: 0.18,
                     suspensionStiffness: 0.12,
                     turnSpeedCurve: (speedFactor) => {
-                        // Junkyard King has balanced turning
                         return 0.6 + (1 - speedFactor) * 0.4;
                     }
                 };
