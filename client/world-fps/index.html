@@ -10,7 +10,8 @@
     {
         "imports": {
             "three": "https://unpkg.com/three@0.162.0/build/three.module.js",
-            "cannon-es": "https://unpkg.com/cannon-es@0.20.0/dist/cannon-es.js"
+            "cannon-es": "https://unpkg.com/cannon-es@0.20.0/dist/cannon-es.js",
+            "cannon-es-debugger": "https://unpkg.com/cannon-es-debugger@1.0.0/dist/cannon-es-debugger.js"
         }
     }
     </script>
@@ -73,16 +74,13 @@
         
         #vehicle-select {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1000;
-            background: rgba(0, 0, 0, 0.9);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
             color: white;
         }
         
@@ -104,13 +102,11 @@
             position: absolute;
             top: 20px;
             left: 20px;
+            z-index: 3;
             color: white;
+            font-family: Arial, sans-serif;
             text-shadow: 2px 2px 2px rgba(0,0,0,0.5);
-            z-index: 1000;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 10px;
-            border-radius: 5px;
-            pointer-events: none;
+            display: none;
         }
         
         .mapboxgl-canvas {
@@ -150,46 +146,51 @@
         }
         
         #location-search {
-            width: calc(100% - 20px);
-            padding: 8px;
-            border: none;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 3;
+            padding: 10px;
             border-radius: 5px;
-            background: rgba(255, 255, 255, 0.9);
-            color: #333;
-            margin-bottom: 5px;
+            border: none;
+            width: 250px;
         }
         
         #search-results {
-            max-height: 150px;
-            overflow-y: auto;
-            background: rgba(0, 0, 0, 0.5);
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            z-index: 3;
+            background: white;
             border-radius: 5px;
+            width: 250px;
+            max-height: 300px;
+            overflow-y: auto;
             display: none;
         }
         
         .search-result {
-            padding: 8px 10px;
+            padding: 10px;
             cursor: pointer;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         .search-result:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-        
-        .damage-indicator {
-            width: 100%;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 2px;
-            margin-top: 5px;
+            background: #f0f0f0;
         }
         
         .damage-bar {
+            width: 200px;
+            height: 20px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+        
+        .damage-bar-fill {
             height: 100%;
-            background: #4CAF50;
-            border-radius: 2px;
-            transition: width 0.3s ease;
+            background: #2ecc71;
+            transition: width 0.3s ease-in-out;
         }
     </style>
 </head>
@@ -204,13 +205,12 @@
         <div id="map"></div>
         <canvas id="game-canvas" willReadFrequently="true"></canvas>
         <div id="hud">
-            <div id="health">HP: 100</div>
-            <div id="ammo">100/300</div>
+            <div id="health">HP: 100/100</div>
             <div id="damage-state">State: Pristine</div>
-            <div class="damage-indicator">
-                <div class="damage-bar" style="width: 100%"></div>
+            <div id="location">Location: Manila, Philippines</div>
+            <div class="damage-bar">
+                <div class="damage-bar-fill" style="width: 100%"></div>
             </div>
-            <div id="location">Loading location...</div>
         </div>
         <div id="teleport-box">
             <input type="text" id="location-search" placeholder="Search for a city to teleport...">

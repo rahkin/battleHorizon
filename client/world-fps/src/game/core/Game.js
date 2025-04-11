@@ -1,6 +1,8 @@
 // Import Three.js and specific components
 import * as THREE from 'three';
 import { BoxGeometry, MeshStandardMaterial, Mesh, Group, Vector3, Quaternion, Euler } from 'three';
+import * as CANNON from 'cannon-es';
+import { CannonPhysics } from './CannonPhysics.js';
 
 // Initialize Mapbox with your access token
 const MAPBOX_TOKEN = 'pk.eyJ1IjoicmFoa2luIiwiYSI6ImNtOTVxYXV2MzFkZDIyanBzZ2d1amc4N24ifQ.BQTvS3wC8JnfsHGYLo0_tw';
@@ -9,8 +11,6 @@ mapboxgl.accessToken = MAPBOX_TOKEN;
 // Import vehicle data and selection UI
 import { VEHICLES } from '../vehicles/vehicles.js';
 import { VehicleSelect } from '../ui/VehicleSelect.js';
-
-import { CannonPhysics } from './CannonPhysics.js';
 
 export class WorldFPS {
     constructor() {
@@ -728,67 +728,303 @@ export class WorldFPS {
     }
 
     async initializeMap() {
-        return new Promise((resolve, reject) => {
-            try {
-                // Set initial position (Manila, Philippines)
-                const initialPosition = [121.0509, 14.5508];
-                
-                this.gameState.map = new mapboxgl.Map({
-            container: 'map',
-            style: 'mapbox://styles/mapbox/streets-v12',
-                    center: initialPosition,
-                    zoom: 20,
-                    pitch: 80, // Set high pitch for driver's perspective
-            bearing: 0,
-            antialias: true,
-                    renderWorldCopies: false
-                });
-
-                // Disable map rotation to prevent confusion
-                this.gameState.map.dragRotate.disable();
-                this.gameState.map.touchZoomRotate.disableRotation();
-
-                this.gameState.map.on('load', () => {
-                    console.log('Map loaded successfully');
-                    
-                    try {
-                        // Add 3D terrain with reduced exaggeration
-                        this.gameState.map.addSource('mapbox-dem', {
-                'type': 'raster-dem',
-                'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
-                'tileSize': 512,
-                'maxzoom': 14
+        try {
+            // Set initial position (Manila, Philippines)
+            const initialPosition = [121.0509, 14.5508];
+            
+            console.log('[DEBUG] Starting map initialization');
+            
+            this.gameState.map = new mapboxgl.Map({
+                container: 'map',
+                style: 'mapbox://styles/mapbox/streets-v12',
+                center: initialPosition,
+                zoom: 20,
+                pitch: 80,
+                bearing: 0,
+                antialias: true,
+                renderWorldCopies: false
             });
 
+            // Wait for map to load
+            await new Promise((resolve) => {
+                this.gameState.map.on('load', () => {
+                    console.log('[DEBUG] Map loaded, proceeding with building layer setup');
+                    
+                    try {
+                        // Add 3D terrain
+                        this.gameState.map.addSource('mapbox-dem', {
+                            'type': 'raster-dem',
+                            'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
+                            'tileSize': 512,
+                            'maxzoom': 14
+                        });
+
                         this.gameState.map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 0.3 });
-                        
-                        // Enhanced building layer with better colors
+                        console.log('[DEBUG] Terrain added successfully');
+
+                        // Add building layer
                         this.gameState.map.addLayer({
-                'id': '3d-buildings',
+                            'id': '3d-buildings',
                             'source': 'composite',
-                'source-layer': 'building',
+                            'source-layer': 'building',
                             'filter': ['==', 'extrude', 'true'],
-                'type': 'fill-extrusion',
-                'minzoom': 15,
-                'paint': {
+                            'type': 'fill-extrusion',
+                            'minzoom': 15,
+                            'paint': {
                                 'fill-extrusion-color': '#ecf0f1',
                                 'fill-extrusion-height': ['get', 'height'],
                                 'fill-extrusion-base': ['get', 'min_height'],
                                 'fill-extrusion-opacity': 0.95
                             }
                         });
+                        console.log('[DEBUG] Building layer added successfully');
+
+                        // Wait a moment for the layer to be ready
+                        setTimeout(() => {
+                            // Query buildings
+                            const buildings = this.gameState.map.queryRenderedFeatures({
+                                layers: ['3d-buildings']
+                            });
+
+                            console.log('[DEBUG] Building query results:', {
+                                totalBuildings: buildings.length,
+                                sampleBuilding: buildings[0] ? {
+                                    properties: buildings[0].properties,
+                                    geometry: buildings[0].geometry
+                                } : null
+                            });
+
+                            // Get map center in mercator coordinates for reference
+                            const mapCenter = this.gameState.map.getCenter();
+                            const centerMercator = this.gameState.map.project(mapCenter);
+
+                            buildings.forEach((building, index) => {
+                                if (building.properties && building.properties.height) {
+                                    // Get the building footprint
+                                    const coordinates = building.geometry.coordinates[0];
+                                    
+                                    // Convert all coordinates to mercator
+                                    const mercatorCoords = coordinates.map(coord => 
+                                        this.gameState.map.project(coord)
+                                    );
+                                    
+                                    // Calculate bounding box in mercator coordinates relative to center
+                                    const bounds = mercatorCoords.reduce((bounds, coord) => {
+                                        bounds.minX = Math.min(bounds.minX, coord.x - centerMercator.x);
+                                        bounds.maxX = Math.max(bounds.maxX, coord.x - centerMercator.x);
+                                        bounds.minY = Math.min(bounds.minY, coord.y - centerMercator.y);
+                                        bounds.maxY = Math.max(bounds.maxY, coord.y - centerMercator.y);
+                                        return bounds;
+                                    }, { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity });
+
+                                    // Scale factor to match Mapbox scale
+                                    const scaleFactor = 0.1;
+
+                                    const dimensions = {
+                                        width: Math.abs(bounds.maxX - bounds.minX) * scaleFactor,
+                                        height: building.properties.height * 0.1,
+                                        depth: Math.abs(bounds.maxY - bounds.minY) * scaleFactor
+                                    };
+
+                                    // Create building mesh with proper geometry
+                                    const geometry = new THREE.BoxGeometry(
+                                        dimensions.width,
+                                        dimensions.height,
+                                        dimensions.depth
+                                    );
+                                    
+                                    // Compute bounding box
+                                    geometry.computeBoundingBox();
+
+                                    const buildingMesh = new THREE.Mesh(
+                                        geometry,
+                                        new THREE.MeshStandardMaterial({
+                                            color: 0xecf0f1,
+                                            transparent: true,
+                                            opacity: 0.0
+                                        })
+                                    );
+
+                                    // Set position
+                                    const position = {
+                                        x: ((bounds.minX + bounds.maxX) / 2) * scaleFactor,
+                                        y: (building.properties.height * 0.1) / 2,
+                                        z: ((bounds.minY + bounds.maxY) / 2) * scaleFactor
+                                    };
+
+                                    buildingMesh.position.set(position.x, position.y, position.z);
+                                    
+                                    // Rotate to align with Mapbox coordinates
+                                    buildingMesh.rotation.y = -this.gameState.map.getBearing() * Math.PI / 180;
+                                    
+                                    // Update world matrix
+                                    buildingMesh.updateMatrixWorld(true);
+
+                                    // Log debug info before adding to physics
+                                    console.log('Building mesh debug info:', {
+                                        index,
+                                        worldPosition: buildingMesh.getWorldPosition(new THREE.Vector3()),
+                                        boundingBox: buildingMesh.geometry.boundingBox,
+                                        dimensions,
+                                        rotation: buildingMesh.rotation.y
+                                    });
+                                    
+                                    // Add to scene
+                                    this.gameState.scene.add(buildingMesh);
+
+                                    // Add physics body
+                                    const physicsBody = this.physics.addBuilding(buildingMesh);
+                                    
+                                    if (physicsBody) {
+                                        console.log('Physics body created:', {
+                                            index,
+                                            bodyPosition: physicsBody.position,
+                                            bodyQuaternion: physicsBody.quaternion,
+                                            shapeType: physicsBody.shapes[0].type
+                                        });
+                                    }
+                                }
+                            });
+                        }, 1000); // Wait 1 second for the layer to be fully loaded
 
                         resolve();
                     } catch (layerError) {
-                        console.error('Error adding map layers:', layerError);
+                        console.error('[DEBUG] Error adding map layers:', layerError);
                         resolve();
                     }
                 });
-            } catch (error) {
-                console.error('Map initialization error:', error);
-                reject(new Error('Failed to initialize map: ' + error.message));
-            }
-        });
+            });
+
+        } catch (error) {
+            console.error('[DEBUG] Map initialization error:', error);
+            throw new Error('Failed to initialize map: ' + error.message);
+        }
+    }
+
+    createImpactEffect(position, normal, force) {
+        // Create impact particles
+        const particleCount = Math.min(50, Math.abs(force) * 5);
+        const particles = new THREE.Group();
+        
+        for (let i = 0; i < particleCount; i++) {
+            const particle = new THREE.Mesh(
+                new THREE.SphereGeometry(0.1 + Math.random() * 0.2),
+                new THREE.MeshBasicMaterial({
+                    color: 0xaaaaaa,
+                    transparent: true,
+                    opacity: 0.8
+                })
+            );
+            
+            // Random position around impact point
+            particle.position.copy(position).add(
+                new THREE.Vector3(
+                    (Math.random() - 0.5) * 2,
+                    (Math.random() - 0.5) * 2,
+                    (Math.random() - 0.5) * 2
+                )
+            );
+            
+            // Random velocity based on impact force
+            particle.userData = {
+                velocity: new THREE.Vector3(
+                    (Math.random() - 0.5) * force * 0.1,
+                    Math.random() * force * 0.1,
+                    (Math.random() - 0.5) * force * 0.1
+                ),
+                lifetime: Date.now() + 1000
+            };
+            
+            particles.add(particle);
+        }
+        
+        this.gameState.scene.add(particles);
+        
+        // Add to projectiles for update
+        if (!this.gameState.projectiles) {
+            this.gameState.projectiles = [];
+        }
+        this.gameState.projectiles.push(particles);
+    }
+
+    applyVehicleDamage(force) {
+        if (!this.gameState.vehicleModel) return;
+        
+        // Calculate damage based on impact force
+        const damage = Math.min(100, Math.abs(force) * 2);
+        
+        // Update vehicle health
+        if (!this.gameState.vehicleModel.userData.health) {
+            this.gameState.vehicleModel.userData.health = 100;
+        }
+        
+        this.gameState.vehicleModel.userData.health -= damage;
+        
+        // Update HUD
+        this.updateHUD();
+        
+        // Check if vehicle is destroyed
+        if (this.gameState.vehicleModel.userData.health <= 0) {
+            this.handleVehicleDestroyed();
+        }
+    }
+
+    handleVehicleDestroyed() {
+        // Create explosion effect
+        this.createExplosionEffect(this.gameState.vehicleModel.position);
+        
+        // Remove vehicle
+        this.gameState.scene.remove(this.gameState.vehicleModel);
+        this.gameState.vehicleModel = null;
+        
+        // Reset game state
+        this.gameState.player = null;
+        
+        // Show game over or respawn options
+        this.showGameOver();
+    }
+
+    createExplosionEffect(position) {
+        const explosion = new THREE.Group();
+        
+        // Create explosion particles
+        for (let i = 0; i < 100; i++) {
+            const particle = new THREE.Mesh(
+                new THREE.SphereGeometry(0.2 + Math.random() * 0.3),
+                new THREE.MeshBasicMaterial({
+                    color: 0xff5500,
+                    transparent: true,
+                    opacity: 0.8
+                })
+            );
+            
+            particle.position.copy(position).add(
+                new THREE.Vector3(
+                    (Math.random() - 0.5) * 2,
+                    (Math.random() - 0.5) * 2,
+                    (Math.random() - 0.5) * 2
+                )
+            );
+            
+            particle.userData = {
+                velocity: new THREE.Vector3(
+                    (Math.random() - 0.5) * 10,
+                    Math.random() * 10,
+                    (Math.random() - 0.5) * 10
+                ),
+                lifetime: Date.now() + 2000
+            };
+            
+            explosion.add(particle);
+        }
+        
+        this.gameState.scene.add(explosion);
+        
+        // Add to projectiles for update
+        if (!this.gameState.projectiles) {
+            this.gameState.projectiles = [];
+        }
+        this.gameState.projectiles.push(explosion);
     }
 
     initializeState() {
@@ -2057,7 +2293,11 @@ export class WorldFPS {
     }
 }
 
-window.onload = () => {
+// Initialize game when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM loaded, initializing game...');
     window.game = new WorldFPS();
-};
+});
+
+export { WorldFPS };
 
