@@ -187,7 +187,7 @@ export class WorldFPS {
 
         // Set initial position and scale
         model.position.set(0, 0.1, 0); // Slightly above ground
-        model.scale.set(0.5, 0.5, 0.5);
+        model.scale.set(0.25, 0.25, 0.25); // Scale down to 1/4 size
         
         // Set initial rotation - only around Y axis
         model.rotation.set(0, 0, 0);
