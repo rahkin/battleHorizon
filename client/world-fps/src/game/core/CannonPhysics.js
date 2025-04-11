@@ -12,6 +12,9 @@ export class CannonPhysics {
         this.world.broadphase = new CANNON.SAPBroadphase(this.world);
         this.world.solver.iterations = 10;
 
+        // Vehicle scaling factor (2x smaller)
+        this.VEHICLE_SCALE = 0.5;
+
         // Create ground plane
         const groundBody = new CANNON.Body({
             type: CANNON.Body.STATIC,
@@ -83,5 +86,32 @@ export class CannonPhysics {
             });
             this.debugBodies = [];
         }
+    }
+
+    // Create a vehicle body with scaled dimensions
+    createVehicleBody(vehicleData, position) {
+        // Scale down vehicle dimensions
+        const width = vehicleData.width * this.VEHICLE_SCALE;
+        const height = vehicleData.height * this.VEHICLE_SCALE;
+        const length = vehicleData.length * this.VEHICLE_SCALE;
+        
+        // Create vehicle body with scaled dimensions
+        const vehicleShape = new CANNON.Box(new CANNON.Vec3(width, height, length));
+        
+        // Create vehicle body
+        const vehicleBody = new CANNON.Body({
+            mass: vehicleData.mass,
+            position: new CANNON.Vec3(position.x, position.y, position.z),
+            shape: vehicleShape
+        });
+        
+        // Add wheels with scaled dimensions
+        const wheelRadius = vehicleData.wheelRadius * this.VEHICLE_SCALE;
+        const wheelWidth = vehicleData.wheelWidth * this.VEHICLE_SCALE;
+        
+        // Add wheels to vehicle body
+        // ... existing wheel code ...
+        
+        return vehicleBody;
     }
 } 

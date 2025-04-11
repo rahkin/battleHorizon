@@ -214,19 +214,19 @@ export class WorldFPS {
     }
 
     createBasicModel() {
-        // Basic fallback model
+        // Basic fallback model with scaled dimensions
         const model = new THREE.Group();
         
-        // Main body
-        const bodyGeometry = new THREE.BoxGeometry(1.5, 0.5, 3);
-            const bodyMaterial = new THREE.MeshStandardMaterial({
+        // Main body (scaled down by 2x)
+        const bodyGeometry = new THREE.BoxGeometry(0.75, 0.25, 1.5);
+        const bodyMaterial = new THREE.MeshStandardMaterial({
             color: 0xff0000,
             metalness: 0.6,
             roughness: 0.4
-            });
-            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-            body.castShadow = true;
-            body.receiveShadow = true;
+        });
+        const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+        body.castShadow = true;
+        body.receiveShadow = true;
             
         model.add(body);
         return model;
@@ -235,41 +235,41 @@ export class WorldFPS {
     createRazorbackModel() {
         const model = new THREE.Group();
         
-        // Sleek, aggressive body
-        const bodyGeometry = new THREE.BoxGeometry(6, 1.5, 12);
+        // Sleek, aggressive body (scaled down by 2x)
+        const bodyGeometry = new THREE.BoxGeometry(3, 0.75, 6);
         const bodyMaterial = new THREE.MeshStandardMaterial({
             color: 0x2d572c, // Military green
             metalness: 0.8,
             roughness: 0.2
         });
         const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-        body.position.y = 1.0; // Raise body to accommodate wheels
+        body.position.y = 0.5; // Scaled down position
         
-        // Aerodynamic cabin - moved forward
-        const cabinGeometry = new THREE.BoxGeometry(5, 2, 6);
-            const cabinMaterial = new THREE.MeshStandardMaterial({
+        // Aerodynamic cabin - moved forward (scaled down by 2x)
+        const cabinGeometry = new THREE.BoxGeometry(2.5, 1, 3);
+        const cabinMaterial = new THREE.MeshStandardMaterial({
             color: 0x1a1a1a,
             metalness: 0.9,
             roughness: 0.1
-            });
-            const cabin = new THREE.Mesh(cabinGeometry, cabinMaterial);
-        cabin.position.y = 2.75;
-        cabin.position.z = 1;
+        });
+        const cabin = new THREE.Mesh(cabinGeometry, cabinMaterial);
+        cabin.position.y = 1.375; // Scaled down position
+        cabin.position.z = 0.5; // Scaled down position
 
         // Create wheel groups for steering
         const frontLeftWheelGroup = new THREE.Group();
         const frontRightWheelGroup = new THREE.Group();
         
-        // Position the wheel groups relative to body
-        frontLeftWheelGroup.position.set(3.5, 1.0, 3);
-        frontRightWheelGroup.position.set(-3.5, 1.0, 3);
+        // Position the wheel groups relative to body (scaled down by 2x)
+        frontLeftWheelGroup.position.set(1.75, 0.5, 1.5);
+        frontRightWheelGroup.position.set(-1.75, 0.5, 1.5);
         
         model.add(frontLeftWheelGroup);
         model.add(frontRightWheelGroup);
         
-        // Add wheels
-        const wheelGeometry = new THREE.CylinderGeometry(1, 1, 0.8, 16);
-            const wheelMaterial = new THREE.MeshStandardMaterial({
+        // Add wheels (scaled down by 2x)
+        const wheelGeometry = new THREE.CylinderGeometry(0.5, 0.5, 0.4, 16);
+        const wheelMaterial = new THREE.MeshStandardMaterial({
             color: 0x1a1a1a,
             metalness: 0.5,
             roughness: 0.7
@@ -284,32 +284,40 @@ export class WorldFPS {
         frontRightWheel.rotation.z = Math.PI / 2;
         frontRightWheelGroup.add(frontRightWheel);
 
-        // Back wheels - directly attached to body
+        // Back wheels - directly attached to body (scaled down by 2x)
         const backLeftWheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
         backLeftWheel.rotation.z = Math.PI / 2;
-        backLeftWheel.position.set(3.5, 1.0, -5.5);
+        backLeftWheel.position.set(1.75, 0.5, -2.75);
         
         const backRightWheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
         backRightWheel.rotation.z = Math.PI / 2;
-        backRightWheel.position.set(-3.5, 1.0, -5.5);
+        backRightWheel.position.set(-1.75, 0.5, -2.75);
         
-        // Long front-mounted cannons
-        const cannonGeometry = new THREE.CylinderGeometry(0.15, 0.15, 8);
+        // Long front-mounted cannons (scaled down by 2x)
+        const cannonGeometry = new THREE.CylinderGeometry(0.075, 0.075, 2); // Reduced length from 4 to 2
         const cannonMaterial = new THREE.MeshStandardMaterial({
             color: 0x111111,
             metalness: 1.0,
-            roughness: 0.2
+            roughness: 0.1
         });
         
-        // Left cannon
+        // Left cannon (scaled down position)
         const cannon1 = new THREE.Mesh(cannonGeometry, cannonMaterial);
-        cannon1.position.set(1.5, 2.2, 5);
+        cannon1.position.set(0.75, 1.1, 2.5); // Scaled down from (1.5, 2.2, 5)
         cannon1.rotation.x = Math.PI / 2;
         
-        // Right cannon
+        // Right cannon (scaled down position)
         const cannon2 = new THREE.Mesh(cannonGeometry, cannonMaterial);
-        cannon2.position.set(-1.5, 2.2, 5);
+        cannon2.position.set(-0.75, 1.1, 2.5); // Scaled down from (-1.5, 2.2, 5)
         cannon2.rotation.x = Math.PI / 2;
+        
+        // Add direction indicator (small arrow - scaled down by 2x)
+        const directionArrow = new THREE.Mesh(
+            new THREE.ConeGeometry(0.15, 0.5, 8), // Scaled down from (0.3, 1, 8)
+            new THREE.MeshStandardMaterial({ color: 0xff0000 })
+        );
+        directionArrow.rotation.x = -Math.PI / 2;
+        directionArrow.position.set(0, 1.75, 2); // Scaled down from (0, 3.5, 4)
         
         model.add(body);
         model.add(cabin);
@@ -317,14 +325,6 @@ export class WorldFPS {
         model.add(cannon2);
         model.add(backLeftWheel);
         model.add(backRightWheel);
-        
-        // Add direction indicator (small arrow)
-        const directionArrow = new THREE.Mesh(
-            new THREE.ConeGeometry(0.3, 1, 8),
-            new THREE.MeshStandardMaterial({ color: 0xff0000 })
-        );
-        directionArrow.rotation.x = -Math.PI / 2;
-        directionArrow.position.set(0, 3.5, 4);
         model.add(directionArrow);
         
         // Store references and orientation data
@@ -2054,6 +2054,33 @@ export class WorldFPS {
             }
         }
         // ... existing code ...
+    }
+
+    createVehicle(vehicleData, position) {
+        // Create visual model
+        const model = this.createVehicleModel(vehicleData);
+        
+        // Create physics body using the new method
+        const physicsBody = this.physics.createVehicleBody(vehicleData, position);
+        
+        // Add model to scene
+        this.gameState.scene.add(model);
+        
+        // Store vehicle data
+        const vehicle = {
+            model,
+            physicsBody,
+            data: vehicleData,
+            position,
+            rotation: new THREE.Euler(),
+            lastUpdate: Date.now()
+        };
+        
+        // Add to game state
+        this.gameState.vehicles = this.gameState.vehicles || [];
+        this.gameState.vehicles.push(vehicle);
+        
+        return vehicle;
     }
 }
 
